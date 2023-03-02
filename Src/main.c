@@ -53,9 +53,129 @@ static void SystemClock_Config(void)
 
   __HAL_RCC_PWR_CLK_ENABLE();
 
-#ifdef STM32F446xx
+#ifdef STM32F412Rx
 
-  #ifdef NUCLEO_F446
+  #ifdef BOARD_LONGBOARD32
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 15;
+  RCC_OscInitStruct.PLL.PLLN = 216;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 8;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+
+  #define APB1CLKDIV RCC_HCLK_DIV4
+  #define APB2CLKDIV RCC_HCLK_DIV1
+
+    #define FLASH_LATENCY FLASH_LATENCY_3
+
+  #elif NUCLEO_F446
+
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+    RCC_OscInitTypeDef RCC_OscInitStruct = {
+#if RTC_ENABLE
+        .OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE,
+        .LSEState       = RCC_LSE_ON,
+#else
+        .OscillatorType = RCC_OSCILLATORTYPE_HSI,
+#endif
+        .HSIState = RCC_HSI_ON,
+        .HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT,
+        .PLL.PLLState = RCC_PLL_ON,
+        .PLL.PLLSource = RCC_PLLSOURCE_HSI,
+        .PLL.PLLM = 16,
+        .PLL.PLLN = 360,
+        .PLL.PLLP = RCC_PLLP_DIV2,
+        .PLL.PLLQ = 2,
+        .PLL.PLLR = 2
+    };
+
+    #define APB1CLKDIV RCC_HCLK_DIV4
+    #define APB2CLKDIV RCC_HCLK_DIV2
+    #define FLASH_LATENCY FLASH_LATENCY_5
+
+  #elif defined(BOARD_FYSETC_S6)
+
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+    RCC_OscInitTypeDef RCC_OscInitStruct = {
+        .OscillatorType = RCC_OSCILLATORTYPE_HSE,
+        .HSEState = RCC_HSE_ON,
+        .PLL.PLLState = RCC_PLL_ON,
+        .PLL.PLLSource = RCC_PLLSOURCE_HSE,
+        .PLL.PLLM = 12, // Input clock divider (12MHz crystal) = Base clock 1MHz
+        .PLL.PLLN = 336, // Main clock multiplier
+        .PLL.PLLP = 2, // Main clock divider = Main clock 168MHz
+        .PLL.PLLQ = 7, // Special peripheral (USB) clock divider (relative to main clock multiplier) = USB clock 48MHz
+        .PLL.PLLR = 2
+    };
+
+    #define APB1CLKDIV RCC_HCLK_DIV2
+    #define APB2CLKDIV RCC_HCLK_DIV1
+    #define FLASH_LATENCY FLASH_LATENCY_5
+
+  #else
+
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+    RCC_OscInitTypeDef RCC_OscInitStruct = {
+        .OscillatorType = RCC_OSCILLATORTYPE_HSE,
+        .HSEState = RCC_HSE_ON,
+        .PLL.PLLState = RCC_PLL_ON,
+        .PLL.PLLSource = RCC_PLLSOURCE_HSE,
+  #if HSE_VALUE == 8000000
+        .PLL.PLLM = 7,
+        .PLL.PLLN = 294,
+        .PLL.PLLP = RCC_PLLP_DIV2,
+        .PLL.PLLQ = 7,
+        .PLL.PLLR = 7
+  #else
+        .PLL.PLLM = (uint32_t)HSE_VALUE / 1000000UL,
+        .PLL.PLLN = 336,
+        .PLL.PLLP = RCC_PLLP_DIV2,
+        .PLL.PLLQ = 2,
+        .PLL.PLLR = 2
+  #endif
+    };
+
+    #define APB1CLKDIV RCC_HCLK_DIV4
+    #define APB2CLKDIV RCC_HCLK_DIV2
+    #define FLASH_LATENCY FLASH_LATENCY_5
+
+  #endif
+
+#elif defined(STM32F411xE)
+
+  #ifdef BOARD_FLEXI_HAL
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 15;
+  RCC_OscInitStruct.PLL.PLLN = 216;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 8;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+
+  #define APB1CLKDIV RCC_HCLK_DIV4
+  #define APB2CLKDIV RCC_HCLK_DIV2
+
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
+  {
+    Error_Handler();
+  } 
+
+    #define FLASH_LATENCY FLASH_LATENCY_5
+
+  #elif NUCLEO_F446
 
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
@@ -266,7 +386,18 @@ static void SystemClock_Config(void)
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CLK48;
-  PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLQ;
+  #if defined(BOARD_FLEXI_HAL)
+  
+    PeriphClkInitStruct.PLLSAI.PLLSAIM = 25;
+    PeriphClkInitStruct.PLLSAI.PLLSAIN = 192;
+    PeriphClkInitStruct.PLLSAI.PLLSAIQ = 2;
+    PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV4;
+    PeriphClkInitStruct.PLLSAIDivQ = 1;
+    PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
+
+  #else    
+    PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLQ;
+  #endif
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
