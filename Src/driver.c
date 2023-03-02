@@ -2064,8 +2064,9 @@ bool driver_init (void)
     DIGITAL_OUT(MPG_MODE_PORT, MPG_MODE_PIN, 1);
 
 #endif
-
-#ifdef STM32F446xx
+#ifdef STM32F412Vx
+    hal.info = "STM32F412";
+#elif defined(STM32F446xx)
     hal.info = "STM32F446";
 #elif defined(STM32F411xE)
     hal.info = "STM32F411";

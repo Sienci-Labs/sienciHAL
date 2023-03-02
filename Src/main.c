@@ -53,7 +53,7 @@ static void SystemClock_Config(void)
 
   __HAL_RCC_PWR_CLK_ENABLE();
 
-#ifdef STM32F412Rx
+#ifdef STM32F412Vx
 
   #ifdef BOARD_LONGBOARD32
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -63,9 +63,9 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 15;
-  RCC_OscInitStruct.PLL.PLLN = 216;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLM = 16;
+  RCC_OscInitStruct.PLL.PLLN = 256;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
   RCC_OscInitStruct.PLL.PLLQ = 8;
   RCC_OscInitStruct.PLL.PLLR = 2;
 
@@ -381,7 +381,7 @@ static void SystemClock_Config(void)
     Error_Handler();
   }
 
-#if USB_SERIAL_CDC && defined(STM32F446xx)
+#if USB_SERIAL_CDC && (defined(STM32F446xx) || defined(STM32F412Vx))
 
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
@@ -394,6 +394,18 @@ static void SystemClock_Config(void)
     PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV4;
     PeriphClkInitStruct.PLLSAIDivQ = 1;
     PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
+
+  #elif defined(BOARD_LONGBOARD32)
+
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_PLLI2S|RCC_PERIPHCLK_CLK48
+                              |RCC_PERIPHCLK_SDIO;
+  PeriphClkInitStruct.PLLI2S.PLLI2SN = 192;
+  PeriphClkInitStruct.PLLI2S.PLLI2SM = 25;
+  PeriphClkInitStruct.PLLI2S.PLLI2SR = 2;
+  PeriphClkInitStruct.PLLI2S.PLLI2SQ = 4;
+  PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLI2SQ;
+  PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
+  PeriphClkInitStruct.PLLI2SSelection = RCC_PLLI2SCLKSOURCE_PLLSRC;
 
   #else    
     PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLQ;

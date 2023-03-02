@@ -20,8 +20,9 @@
 */
 
 #include "driver.h"
+#include "tmc/ic/TMC2660/TMC2660.h"
 
-#if defined(BOARD_LONGBOARD32) && KEYPAD_ENABLE
+#if defined(BOARD_LONGBOARD32)
 
 #include <math.h>
 #include <string.h>
@@ -31,56 +32,13 @@
 #include "grbl/protocol.h"
 #include "grbl/settings.h"
 
+#if KEYPAD_ENABLE
+
 static uint8_t keycode = 0;
 static keycode_callback_ptr keypad_callback = NULL;
 static bool pendant_tx_active = 0;
 
 static FMPI2C_HandleTypeDef *i2c_port;
-
-void I2C_PendantRead (uint32_t i2cAddr, uint8_t memaddress, uint8_t size, uint8_t * data, keycode_callback_ptr callback)
-{
-
-    uint32_t ms = hal.get_elapsed_ticks();  //50 ms timeout
-    uint32_t timeout_ms = ms + 50;
-
-    if(keypad_callback != NULL || pendant_tx_active) //we are in the middle of a read
-        return;
-
-    keycode = 'r';
-    keypad_callback = callback;
-
-    while((HAL_FMPI2C_Mem_Read_IT(i2c_port, i2cAddr << 1, memaddress, 1, data, size)) != HAL_OK){
-        if (ms > timeout_ms){
-            keypad_callback = NULL;
-            keycode = 0;
-            i2c_init();
-            return;
-        }
-        hal.delay_ms(1, NULL);
-        ms = hal.get_elapsed_ticks();
-    }
-}
-
-void I2C_PendantWrite (uint32_t i2cAddr, uint8_t *buf, uint16_t bytes)
-{
-
-    uint32_t ms = hal.get_elapsed_ticks();  //50 ms timeout
-    uint32_t timeout_ms = ms + 50;
-
-    if(keypad_callback != NULL || pendant_tx_active) //we are in the middle of a read
-        return;
-    pendant_tx_active = 1;
-
-    while((HAL_FMPI2C_Master_Transmit_IT(i2c_port,  i2cAddr<<1, buf, bytes) != HAL_OK)){
-        if (ms > timeout_ms){
-            pendant_tx_active = 0;
-            i2c_init();
-            return;
-        }
-        hal.delay_ms(1, NULL);
-        ms = hal.get_elapsed_ticks();
-    }
-}
 
 void HAL_FMPI2C_MemRxCpltCallback(FMPI2C_HandleTypeDef *hi2c)
 {
@@ -108,9 +66,42 @@ bool flexi_stream_tx_blocking (void)
 }
 #endif
 
+#endif
+
+void tmc2660_writeInt(uint8_t motor, uint8_t address, int value)
+{	UNUSED(motor);
+
+	// tmc2660_writeDatagram(address, 0xFF & (value>>24), 0xFF & (value>>16), 0xFF & (value>>8), 0xFF & (value>>0));
+}
+
+uint32_t tmc2660_readInt(uint8_t motor, uint8_t address)
+{
+    return 0;
+}
+void tmc2660_readWrite(uint8_t motor, uint32_t value)
+{}
+
 void board_init (void)
 {
+    uint8_t i;
+    #if KEYPAD_ENABLE
     i2c_port = I2C_GetPort();
+    #endif
+
+    /* set default values to TMC2660 drivers*/
+
+    for (i=0; i < 4; i++){
+
+    tmc2660_writeInt(i, TMC2660_DRVCONF,  0x000205);
+	tmc2660_writeInt(i, TMC2660_DRVCTRL,  0x080000);
+	tmc2660_writeInt(i, TMC2660_CHOPCONF, 0x0A0747);
+	tmc2660_writeInt(i, TMC2660_SMARTEN,  0x0C0214);
+	tmc2660_writeInt(i, TMC2660_SGCSCONF, 0x0EF00E); //always append E
+
+    //add some init code for neopixel?
+
+    }
+
 }
 
 #endif
