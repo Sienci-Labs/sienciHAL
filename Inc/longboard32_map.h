@@ -23,10 +23,6 @@
 #error "Axis configuration is not supported!"
 #endif
 
-#if TRINAMIC_ENABLE
-#error "Trinamic plugin not supported!"
-#endif
-
 #if !defined(STM32F412Vx) || HSE_VALUE != 25000000
 #error "This board has STM32F446 processor with a 25MHz crystal, select a corresponding build!"
 #endif
@@ -35,15 +31,13 @@
 #define BOARD_URL "Sienci Longboard32"
 
 #undef I2C_ENABLE
-#undef EEPROM_ENABLE
 
 #define I2C_ENABLE 1
 #define I2C_FASTMODE
-#define EEPROM_ENABLE 2
 #define HAS_IOPORTS
-#if KEYPAD_ENABLE
+
 #define HAS_BOARD_INIT
-#endif
+
 
 #if MODBUS_ENABLE
 #define SERIAL2_MOD 3
@@ -194,6 +188,19 @@
 #if I2C_STROBE_ENABLE
 #define I2C_STROBE_PORT         GPIOD
 #define I2C_STROBE_PIN          10
+#endif
+
+// SPI2 is used: GPIOB pin 12 (SCK) GPIOC pin 2 (MISO) and 3 (MOSI)
+#define MOTOR_CSX_PORT              GPIOD
+#define MOTOR_CSX_PIN               11
+#define MOTOR_CSY_PORT              GPIOE
+#define MOTOR_CSY_PIN               15
+#define MOTOR_CSZ_PORT              GPIOD
+#define MOTOR_CSZ_PIN               9
+
+#ifdef  M3_AVAILABLE
+#define MOTOR_CSM3_PORT             GPIOE
+#define MOTOR_CSM3_PIN              12
 #endif
 
 #if SDCARD_ENABLE

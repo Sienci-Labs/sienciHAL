@@ -46,7 +46,12 @@ MEMORY
 {
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 256K
   FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
+  EEPROM_EMUL(xrw)      : ORIGIN = 0x80E0000,   LENGTH = 128K
 }
+
+_FLASH_VectorTable = ORIGIN(FLASH);
+_EEPROM_Emul_Start = ORIGIN(EEPROM_EMUL);
+_EEPROM_Emul_Sector = 11;
 
 /* Sections */
 SECTIONS

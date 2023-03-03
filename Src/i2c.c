@@ -33,9 +33,9 @@
 #ifdef I2C_FASTMODE
 
 #define I2CPORT FMPI2C1
-#define I2C_SCL_PIN 6
-#define I2C_SDA_PIN 7
-#define I2C_GPIO GPIOC
+#define I2C_SCL_PIN 10
+#define I2C_SDA_PIN 14
+#define I2C_GPIO GPIOB
 #define I2C_GPIO_AF GPIO_AF4_FMPI2C1
 #define I2C_CLKENA __HAL_RCC_FMPI2C1_CLK_ENABLE
 #define I2C_IRQEVT FMPI2C1_EV_IRQn
@@ -95,9 +95,7 @@
 
 static FMPI2C_HandleTypeDef i2c_port = {
     .Instance = I2CPORT,
-    //.Init.Timing = 0xC0000E12, //100 KHz
-    //.Init.Timing = 0x0020081B, //1000 KHz
-    .Init.Timing =0x00401650, //400 KHz
+    .Init.Timing =0x0010061A, //400 KHz
     .Init.OwnAddress1 = 0,
     .Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT,
     .Init.DualAddressMode = I2C_DUALADDRESS_DISABLE,
@@ -135,20 +133,30 @@ I2C_HandleTypeDef *I2C_GetPort (void)
 
 void i2c_init (void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {
-        .Pin = (1 << I2C_SCL_PIN)|(1 << I2C_SDA_PIN),
-        .Mode = GPIO_MODE_AF_OD,
-        .Pull = GPIO_PULLUP,
-        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
-        .Alternate = I2C_GPIO_AF
-    };
-    HAL_GPIO_Init(I2C_GPIO, &GPIO_InitStruct);
+
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    GPIO_InitStruct.Pin = GPIO_PIN_10;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF9_FMPI2C1;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_14;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF4_FMPI2C1;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     I2C_CLKENA();
 
 #ifdef I2C_FASTMODE
-    HAL_FMPI2C_Init(&i2c_port);
     HAL_FMPI2CEx_ConfigAnalogFilter(&i2c_port, FMPI2C_ANALOGFILTER_ENABLE);
+    HAL_FMPI2C_Init(&i2c_port);
+    __HAL_FMPI2C_ENABLE(&i2c_port);
+    HAL_NVIC_SetPriority(FMPI2C1_EV_IRQn, 0, 0);
 #else
     HAL_I2C_Init(&i2c_port);
 #endif
@@ -215,13 +223,20 @@ nvs_transfer_result_t i2c_nvs_transfer (nvs_transfer_t *i2c, bool read)
             return NVS_TransferResult_Failed;
     }
 
-    //    while (HAL_I2C_IsDeviceReady(&i2c_port, (uint16_t)(0xA0), 3, 100) != HAL_OK);
+        //while (HAL_I2C_IsDeviceReady(&i2c_port, (uint16_t)(0xA0), 3, 100) != HAL_OK);
     HAL_StatusTypeDef ret;
-
+    #ifdef I2C_FASTMODE
+    if(read)
+        ret = I2C_Mem_Read(&i2c_port, i2c->address << 1, i2c->word_addr, i2c->word_addr_bytes, i2c->data, i2c->count, 100);
+    else {
+        ret = I2C_Mem_Write(&i2c_port, i2c->address << 1, i2c->word_addr, i2c->word_addr_bytes, i2c->data, i2c->count, 100);
+    #else
     if(read)
         ret = I2C_Mem_Read(&i2c_port, i2c->address << 1, i2c->word_addr, i2c->word_addr_bytes == 2 ? I2C_MEMADD_SIZE_16BIT : I2C_MEMADD_SIZE_8BIT, i2c->data, i2c->count, 100);
     else {
         ret = I2C_Mem_Write(&i2c_port, i2c->address << 1, i2c->word_addr, i2c->word_addr_bytes == 2 ? I2C_MEMADD_SIZE_16BIT : I2C_MEMADD_SIZE_8BIT, i2c->data, i2c->count, 100);
+    #endif 
+
 #if !EEPROM_IS_FRAM
         hal.delay_ms(5, NULL);
 #endif
