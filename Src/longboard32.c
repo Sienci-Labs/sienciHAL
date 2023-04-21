@@ -31,6 +31,8 @@
 #include "grbl/protocol.h"
 #include "grbl/settings.h"
 
+#include "trinamic/tmc2660.h"
+
 SPI_HandleTypeDef hspi2 = {0};
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -104,8 +106,9 @@ inline static void delay (void)
 
 static uint8_t spi_get_byte (void)
 {
-    spi_port.Instance->DR = 0xFF; // Writing dummy data into Data register
+    spi_port.Instance->DR = 0x01; // Writing dummy data into Data register
 
+    while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_TXE));
     while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_RXNE));
 
     return (uint8_t)spi_port.Instance->DR;
@@ -123,50 +126,51 @@ static uint8_t spi_put_byte (uint8_t byte)
     return (uint8_t)spi_port.Instance->DR;
 }
 
-TMC_spi_status_t tmc_spi_read (trinamic_motor_t driver, TMC_spi_datagram_t *datagram)
+TMC_spi_status_t tmc2660_spi_read (trinamic_motor_t driver, TMC2660_spi_datagram_t *datagram)
 {
     TMC_spi_status_t status;
 
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
-
-    datagram->payload.value = 0;
-
-    datagram->addr.write = 0;
-    spi_put_byte(datagram->addr.value);
-    spi_put_byte(0);
-    spi_put_byte(0);
-    spi_put_byte(0);
-    spi_put_byte(0);
-
-    DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);
     delay();
-    DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
-
-    status = spi_put_byte(datagram->addr.value);
-    datagram->payload.data[3] = spi_get_byte();
     datagram->payload.data[2] = spi_get_byte();
     datagram->payload.data[1] = spi_get_byte();
     datagram->payload.data[0] = spi_get_byte();
 
+    delay();
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);
+
+    status = 1;
 
     return status;
 }
 
-TMC_spi_status_t tmc_spi_write (trinamic_motor_t driver, TMC_spi_datagram_t *datagram)
+TMC_spi_status_t tmc_spi_write (trinamic_motor_t driver, TMC_spi_datagram_t *tm_datagram)
 {
     TMC_spi_status_t status;
     uint32_t gram = 0;
-
+#if 1
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
-    /*datagram->addr.write = 1;
-    status = spi_put_byte(datagram->addr.value);
-    spi_put_byte(datagram->payload.data[3]);
-    spi_put_byte(datagram->payload.data[2]);
-    spi_put_byte(datagram->payload.data[1]);
-    spi_put_byte(datagram->payload.data[0]);*/
+    gram = ((tm_datagram->addr.value << 16) | tm_datagram->payload.value);
 
+    spi_put_byte(gram>>16 & 0xFF);
+    spi_put_byte(gram>>8 & 0xFF);
+    spi_put_byte(gram & 0xFF);
+
+    delay();
+    DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);
+#endif
+    return status;
+}
+
+
+TMC_spi_status_t tmc2660_spi_write (trinamic_motor_t driver, TMC2660_spi_datagram_t *datagram)
+{
+    TMC_spi_status_t status;
+    uint32_t gram = 0;
+#if 1
+    DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
+    delay();
     gram = ((datagram->addr.value << 16) | datagram->payload.value);
 
     spi_put_byte(gram>>16 & 0xFF);
@@ -177,6 +181,7 @@ TMC_spi_status_t tmc_spi_write (trinamic_motor_t driver, TMC_spi_datagram_t *dat
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);
 
     return status;
+#endif
 }
 
 static void add_cs_pin (xbar_t *gpio, void *data)
