@@ -132,9 +132,9 @@ TMC_spi_status_t tmc2660_spi_read (trinamic_motor_t driver, TMC2660_spi_datagram
 
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
-    datagram->payload.data[2] = spi_get_byte();
-    datagram->payload.data[1] = spi_get_byte();
-    datagram->payload.data[0] = spi_get_byte();
+    //datagram->payload.data[2] = spi_get_byte();
+    //datagram->payload.data[1] = spi_get_byte();
+    //datagram->payload.data[0] = spi_get_byte();
 
     delay();
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);

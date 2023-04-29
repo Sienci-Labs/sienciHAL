@@ -70,7 +70,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLR = 2;
 
   #define APB1CLKDIV RCC_HCLK_DIV4
-  #define APB2CLKDIV RCC_HCLK_DIV1
+  #define APB2CLKDIV RCC_HCLK_DIV2
 
     #define FLASH_LATENCY FLASH_LATENCY_3
 

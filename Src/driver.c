@@ -2552,6 +2552,9 @@ void EXTI4_IRQHandler(void)
             DEBOUNCE_TIMER->CR1 |= TIM_CR1_CEN; // Start debounce timer (40ms)
         } else
             hal.limits.interrupt_callback(limitsGetState());
+#elif MPG_MODE_BIT && (MPG_MODE_BIT & 1<<4)
+        if(ifg & MPG_MODE_BIT)
+            protocol_enqueue_rt_command(mpg_select);          
 #elif AUXINPUT_MASK & (1<<4)
         ioports_event(ifg);
 #endif
