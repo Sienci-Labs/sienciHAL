@@ -136,9 +136,9 @@
 #define AUXOUTPUT0_PORT         GPIOC
 #define AUXOUTPUT0_PIN          14
 #define AUXOUTPUT1_PORT         GPIOC
-#define AUXOUTPUT1_PIN          1
+#define AUXOUTPUT1_PIN          0
 #define AUXOUTPUT2_PORT         GPIOC
-#define AUXOUTPUT2_PIN          2
+#define AUXOUTPUT2_PIN          1
 #define AUXOUTPUT3_PORT         GPIOC
 #define AUXOUTPUT3_PIN          4
 
@@ -189,6 +189,8 @@
 #define I2C_STROBE_PORT         GPIOD
 #define I2C_STROBE_PIN          10
 #endif
+
+#define TMC_STEALTHCHOP 0
 
 // SPI2 is used: GPIOB pin 12 (SCK) GPIOC pin 2 (MISO) and 3 (MOSI)
 #define MOTOR_CSX_PORT              GPIOD
