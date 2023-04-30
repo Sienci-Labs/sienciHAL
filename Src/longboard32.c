@@ -106,7 +106,7 @@ inline static void delay (void)
 
 static uint8_t spi_get_byte (void)
 {
-    spi_port.Instance->DR = 0x01; // Writing dummy data into Data register
+    spi_port.Instance->DR = 0x05; // Writing dummy data into Data register
 
     while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_TXE));
     while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_RXNE));
@@ -129,18 +129,18 @@ static uint8_t spi_put_byte (uint8_t byte)
 TMC_spi_status_t tmc2660_spi_read (trinamic_motor_t driver, TMC2660_spi_datagram_t *datagram)
 {
     TMC_spi_status_t status;
-
+    #if 1
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
-    //datagram->payload.data[2] = spi_get_byte();
-    //datagram->payload.data[1] = spi_get_byte();
-    //datagram->payload.data[0] = spi_get_byte();
+    datagram->payload.data[2] = spi_get_byte();
+    datagram->payload.data[1] = spi_get_byte();
+    datagram->payload.data[0] = spi_get_byte();
 
     delay();
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);
 
     status = 1;
-
+    #endif
     return status;
 }
 
@@ -171,6 +171,7 @@ TMC_spi_status_t tmc2660_spi_write (trinamic_motor_t driver, TMC2660_spi_datagra
 #if 1
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
+    //gram = ((datagram->addr.value << 16) | datagram->payload.value);
     gram = ((datagram->addr.value << 16) | datagram->payload.value);
 
     spi_put_byte(gram>>16 & 0xFF);
@@ -212,11 +213,6 @@ static void add_cs_pin (xbar_t *gpio, void *data)
         case Output_MotorChipSelectM4:
             cs[4].port = (GPIO_TypeDef *)gpio->port;
             cs[4].pin = gpio->pin;
-            break;
-
-        case Output_MotorChipSelectM5:
-            cs[5].port = (GPIO_TypeDef *)gpio->port;
-            cs[5].pin = gpio->pin;
             break;
 
         default:
