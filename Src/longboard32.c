@@ -129,6 +129,7 @@ static uint8_t spi_put_byte (uint8_t byte)
 TMC_spi_status_t tmc2660_spi_read (trinamic_motor_t driver, TMC2660_spi_datagram_t *datagram)
 {
     TMC_spi_status_t status;
+    
     #if 1
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
@@ -148,7 +149,7 @@ TMC_spi_status_t tmc_spi_write (trinamic_motor_t driver, TMC_spi_datagram_t *tm_
 {
     TMC_spi_status_t status;
     uint32_t gram = 0;
-#if 1
+#if 0
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
     gram = ((tm_datagram->addr.value << 16) | tm_datagram->payload.value);

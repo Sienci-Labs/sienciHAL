@@ -544,7 +544,11 @@ static bool serial2SuspendInput (bool suspend)
 static bool serial2SetBaudRate (uint32_t baud_rate)
 {
     UART2->CR1 = USART_CR1_RE|USART_CR1_TE;
-    UART2->BRR = UART_BRR_SAMPLING16(UART2_CLK, baud_rate);
+    #if(BOARD_LONGBOARD32) //do not know exactly why this is needed, all other timings look correct.
+        UART2->BRR = UART_BRR_SAMPLING16(UART2_CLK/2, baud_rate);
+    #else
+        UART2->BRR = UART_BRR_SAMPLING16(UART2_CLK/2, baud_rate);
+    #endif
     UART2->CR1 |= (USART_CR1_UE|USART_CR1_RXNEIE);
 
     return true;
@@ -661,7 +665,7 @@ const io_stream_t *serial2Init (uint32_t baud_rate)
         static const periph_pin_t rx = {
             .function = Input_RX,
             .group = PinGroup_UART2,
-            .port = GPIOA,
+            .port = GPIOD,
             .pin = 6,
             .mode = { .mask = PINMODE_NONE },
             .description = "UART2"
