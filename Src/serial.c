@@ -636,36 +636,68 @@ const io_stream_t *serial2Init (uint32_t baud_rate)
     };
 
 #elif SERIAL2_MOD == 2
+    #if (BOARD_LONGBOARD32)
+        __HAL_RCC_USART2_CLK_ENABLE();
+        __HAL_RCC_GPIOD_CLK_ENABLE();
 
-    __HAL_RCC_USART2_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+        GPIO_InitTypeDef GPIO_InitStructure = {
+            .Mode      = GPIO_MODE_AF_PP,
+            .Pull      = GPIO_NOPULL,
+            .Speed     = GPIO_SPEED_FREQ_VERY_HIGH,
+            .Pin       = GPIO_PIN_5|GPIO_PIN_6,
+            .Alternate = GPIO_AF7_USART2
+        };
+        HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-    GPIO_InitTypeDef GPIO_InitStructure = {
-        .Mode      = GPIO_MODE_AF_PP,
-        .Pull      = GPIO_NOPULL,
-        .Speed     = GPIO_SPEED_FREQ_VERY_HIGH,
-        .Pin       = GPIO_PIN_2|GPIO_PIN_3,
-        .Alternate = GPIO_AF7_USART1
-    };
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+        static const periph_pin_t tx = {
+            .function = Output_TX,
+            .group = PinGroup_UART2,
+            .port  = GPIOD,
+            .pin   = 5,
+            .mode  = { .mask = PINMODE_OUTPUT },
+            .description = "UART2"
+        };
 
-    static const periph_pin_t tx = {
-        .function = Output_TX,
-        .group = PinGroup_UART2,
-        .port  = GPIOA,
-        .pin   = 2,
-        .mode  = { .mask = PINMODE_OUTPUT },
-        .description = "UART2"
-    };
+        static const periph_pin_t rx = {
+            .function = Input_RX,
+            .group = PinGroup_UART2,
+            .port = GPIOA,
+            .pin = 6,
+            .mode = { .mask = PINMODE_NONE },
+            .description = "UART2"
+        };
+    #else
 
-    static const periph_pin_t rx = {
-        .function = Input_RX,
-        .group = PinGroup_UART2,
-        .port = GPIOA,
-        .pin = 3,
-        .mode = { .mask = PINMODE_NONE },
-        .description = "UART2"
-    };
+        __HAL_RCC_USART2_CLK_ENABLE();
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+
+        GPIO_InitTypeDef GPIO_InitStructure = {
+            .Mode      = GPIO_MODE_AF_PP,
+            .Pull      = GPIO_NOPULL,
+            .Speed     = GPIO_SPEED_FREQ_VERY_HIGH,
+            .Pin       = GPIO_PIN_2|GPIO_PIN_3,
+            .Alternate = GPIO_AF7_USART1
+        };
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+        static const periph_pin_t tx = {
+            .function = Output_TX,
+            .group = PinGroup_UART2,
+            .port  = GPIOA,
+            .pin   = 2,
+            .mode  = { .mask = PINMODE_OUTPUT },
+            .description = "UART2"
+        };
+
+        static const periph_pin_t rx = {
+            .function = Input_RX,
+            .group = PinGroup_UART2,
+            .port = GPIOA,
+            .pin = 3,
+            .mode = { .mask = PINMODE_NONE },
+            .description = "UART2"
+        };
+    #endif
 
 #elif SERIAL2_MOD == 3
 

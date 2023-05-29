@@ -40,8 +40,8 @@
 
 
 #if MODBUS_ENABLE
-#define SERIAL2_MOD 3
-#define MODBUS_SERIAL_PORT 2
+#define SERIAL2_MOD 2
+#define MODBUS_SERIAL_PORT 1
 #endif
 
 #if MPG_MODE == 1
