@@ -36,7 +36,7 @@
 #define I2C_SCL_PIN 10
 #define I2C_SDA_PIN 14
 #define I2C_GPIO GPIOB
-#define I2C_GPIO_AF GPIO_AF4_FMPI2C1
+#define I2C_GPIO_AF GPIO_AF9_FMPI2C1
 #define I2C_CLKENA __HAL_RCC_FMPI2C1_CLK_ENABLE
 #define I2C_IRQEVT FMPI2C1_EV_IRQn
 #define I2C_IRQERR FMPI2C1_ER_IRQn
@@ -95,7 +95,7 @@
 
 static FMPI2C_HandleTypeDef i2c_port = {
     .Instance = I2CPORT,
-    .Init.Timing =0x0010061A, //400 KHz
+    .Init.Timing =0x0010061A, //100 KHz
     .Init.OwnAddress1 = 0,
     .Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT,
     .Init.DualAddressMode = I2C_DUALADDRESS_DISABLE,
@@ -140,14 +140,14 @@ void i2c_init (void)
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF9_FMPI2C1;
+    GPIO_InitStruct.Alternate = I2C_GPIO_AF;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_14;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF4_FMPI2C1;
+    GPIO_InitStruct.Alternate = I2C_GPIO_AF;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     I2C_CLKENA();

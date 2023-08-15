@@ -31,9 +31,11 @@
 #define BOARD_URL "Sienci Longboard32"
 
 #undef I2C_ENABLE
+#undef EEPROM_ENABLE
 
-#define I2C_ENABLE 1
-#define I2C_FASTMODE
+//#define I2C_ENABLE 1
+//#define I2C_FASTMODE
+//#define EEPROM_ENABLE 2
 #define HAS_IOPORTS
 
 #define HAS_BOARD_INIT
@@ -123,8 +125,16 @@
 #define SPINDLE_OUTMODE         GPIO_BITBAND
 
 // Define spindle PWM output pin.
+#ifdef SIENCI_LASER_PWM
+#define SPINDLE_PWM_PORT_BASE   GPIOC_BASE
+#define SPINDLE_PWM_PIN         6
+//#define SPINDLE_PWM_TIMER_N     3
+#else
 #define SPINDLE_PWM_PORT_BASE   GPIOA_BASE
 #define SPINDLE_PWM_PIN         8
+#endif
+
+
 
 // Define flood and mist coolant enable output pins.
 #define COOLANT_FLOOD_PORT      GPIOD

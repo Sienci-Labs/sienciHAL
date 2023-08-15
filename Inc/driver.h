@@ -214,6 +214,13 @@
     #define SPINDLE_PWM_TIMER_INV   0
     #define SPINDLE_PWM_TIMER_AF    3
   #endif
+#elif SPINDLE_PWM_PORT_BASE == GPIOC_BASE
+  #if SPINDLE_PWM_PIN == 6 // PC6 - TIM3_CH1N
+    #define SPINDLE_PWM_TIMER_N     3
+    #define SPINDLE_PWM_TIMER_CH    1
+    #define SPINDLE_PWM_TIMER_INV   0
+    #define SPINDLE_PWM_TIMER_AF    2
+  #endif  
 #elif SPINDLE_PWM_PORT_BASE == GPIOE_BASE
   #if SPINDLE_PWM_PIN == 5 // PE5 - TIM9_CH1
     #define SPINDLE_PWM_TIMER_N     9

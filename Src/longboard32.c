@@ -36,7 +36,8 @@
 SPI_HandleTypeDef hspi2 = {0};
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-#if KEYPAD_ENABLE || EEPROM_ENABLE
+//#if KEYPAD_ENABLE || EEPROM_ENABLE
+#if 0
 
 static uint8_t keycode = 0;
 static keycode_callback_ptr keypad_callback = NULL;
@@ -106,9 +107,8 @@ inline static void delay (void)
 
 static uint8_t spi_get_byte (void)
 {
-    spi_port.Instance->DR = 0x05; // Writing dummy data into Data register
+    spi_port.Instance->DR = 0xFF; // Writing dummy data into Data register
 
-    while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_TXE));
     while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_RXNE));
 
     return (uint8_t)spi_port.Instance->DR;
@@ -131,6 +131,9 @@ TMC_spi_status_t tmc2660_spi_read (trinamic_motor_t driver, TMC2660_spi_datagram
     TMC_spi_status_t status;
     
     #if 1
+
+    while(__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_BSY));
+
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
     datagram->payload.data[2] = spi_get_byte();
@@ -170,14 +173,15 @@ TMC_spi_status_t tmc2660_spi_write (trinamic_motor_t driver, TMC2660_spi_datagra
     TMC_spi_status_t status;
     uint32_t gram = 0;
 #if 1
+    while(__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_BSY));
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 0);
     delay();
     //gram = ((datagram->addr.value << 16) | datagram->payload.value);
     gram = ((datagram->addr.value << 16) | datagram->payload.value);
 
-    spi_put_byte(gram>>16 & 0xFF);
-    spi_put_byte(gram>>8 & 0xFF);
-    spi_put_byte(gram & 0xFF);
+    status = spi_put_byte(gram>>16 & 0xFF);
+    status = spi_put_byte(gram>>8 & 0xFF);
+    status = spi_put_byte(gram & 0xFF);
 
     delay();
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);
