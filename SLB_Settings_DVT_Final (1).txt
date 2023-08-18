@@ -1,0 +1,252 @@
+%
+; grblHAL
+; 1.1f.20230129
+; [OPT:VNMHSL2,128,1024,3,0]
+; [NEWOPT:ENUMS,RT+,HOME,TC,SED,TMC=7]
+; [AXS:3:XYZ]
+; [FIRMWARE:grblHAL]
+; [NVS STORAGE:*FLASH]
+; [DRIVER:STM32F412]
+; [DRIVER VERSION:230125]
+; [BOARD:Sienci Longboard32]
+; [AUX IO:6,6,0,0]
+; [PLUGIN:Trinamic v0.10]
+; [PLUGIN:MODBUS v0.14]
+; [PLUGIN:HUANYANG VFD v0.09]
+; [PLUGIN:Durapulse VFD GS20 v0.03]
+; [PLUGIN:Yalang VFD YL620A v0.01]
+; [PLUGIN:MODVFD v0.03]
+; [PLUGIN:H-100 VFD v0.01]
+; [SPINDLE:PWM]
+;
+$N0=
+$N1=
+; 0 - Step pulse time
+$0=3.0
+; 1 - Step idle delay
+$1=254
+; 2 - Step pulse invert
+$2=0
+; 3 - Step direction invert
+$3=6
+; 4 - Invert stepper enable pin(s)
+$4=7
+; 5 - Invert limit pins
+$5=7
+; 6 - Invert probe pin
+$6=1
+; 8 - Ganged axes direction invert
+$8=0
+; 9 - PWM Spindle
+$9=1
+; 10 - Status report options
+$10=511
+; 11 - Junction deviation
+$11=0.010
+; 12 - Arc tolerance
+$12=0.002
+; 13 - Report in inches
+$13=0
+; 14 - Invert control pins
+$14=7
+; 15 - Invert coolant pins
+$15=0
+; 16 - Invert spindle signals
+$16=4
+; 17 - Pullup disable control pins
+$17=0
+; 18 - Pullup disable limit pins
+$18=0
+; 19 - Pullup disable probe pin
+$19=0
+; 20 - Soft limits enable
+$20=0
+; 21 - Hard limits enable
+$21=0
+; 22 - Homing cycle
+$22=3
+; 23 - Homing direction invert
+$23=3
+; 24 - Homing locate feed rate
+$24=100.0
+; 25 - Homing search seek rate
+$25=2000.0
+; 26 - Homing switch debounce delay
+$26=250
+; 27 - Homing switch pull-off distance
+$27=1.000
+; 28 - G73 Retract distance
+$28=0.100
+; 29 - Pulse delay
+$29=5.0
+; 30 - Maximum spindle speed
+$30=255.000
+; 31 - Minimum spindle speed
+$31=0.000
+; 32 - Mode of operation
+$32=0
+; 33 - Spindle PWM frequency
+$33=5000
+; 34 - Spindle PWM off value
+$34=0.0
+; 35 - Spindle PWM min value
+$35=0.0
+; 36 - Spindle PWM max value
+$36=100.0
+; 37 - Steppers deenergize
+$37=4
+; 39 - Enable legacy RT commands
+$39=1
+; 40 - Limit jog commands
+$40=1
+; 43 - Homing passes
+$43=1
+; 44 - Axes homing, first pass
+$44=4
+; 45 - Axes homing, second pass
+$45=3
+; 46 - Axes homing, third pass
+$46=0
+; 62 - Sleep enable
+$62=0
+; 63 - Feed hold actions
+$63=2
+; 64 - Force init alarm
+$64=0
+; 65 - Probing feed override
+$65=0
+; 100 - X-axis travel resolution
+$100=200.000
+; 101 - Y-axis travel resolution
+$101=200.000
+; 102 - Z-axis travel resolution
+$102=200.000
+; 110 - X-axis maximum rate
+$110=8000.000
+; 111 - Y-axis maximum rate
+$111=8000.000
+; 112 - Z-axis maximum rate
+$112=6000.000
+; 120 - X-axis acceleration
+$120=1000.000
+; 121 - Y-axis acceleration
+$121=1000.000
+; 122 - Z-axis acceleration
+$122=550.000
+; 130 - X-axis maximum travel
+$130=760.000
+; 131 - Y-axis maximum travel
+$131=350.000
+; 132 - Z-axis maximum travel
+$132=200.000
+; 140 - X-axis motor current
+$140=3500
+; 141 - Y-axis motor current
+$141=3500
+; 142 - Z-axis motor current
+$142=3500
+; 150 - X-axis microsteps
+$150=8
+; 151 - Y-axis microsteps
+$151=8
+; 152 - Z-axis microsteps
+$152=8
+; 170 - X-axis dual axis offset
+$170=0.000
+; 171 - Y-axis dual axis offset
+$171=0.000
+; 172 - Z-axis dual axis offset
+$172=0.000
+; 180 - X-axis homing locate feed rate
+$180=25
+; 181 - Y-axis homing locate feed rate
+$181=25
+; 182 - Z-axis homing locate feed rate
+$182=25
+; 190 - X-axis homing search seek rate
+$190=500
+; 191 - Y-axis homing search seek rate
+$191=500
+; 192 - Z-axis homing search seek rate
+$192=500
+; 200 - X-axis StallGuard2 fast threshold
+$200=22
+; 201 - Y-axis StallGuard2 fast threshold
+$201=22
+; 202 - Z-axis StallGuard2 fast threshold
+$202=22
+; 210 - X-axis hold current
+$210=50
+; 211 - Y-axis hold current
+$211=50
+; 212 - Z-axis hold current
+$212=50
+; 220 - X-axis stallGuard2 slow threshold
+$220=22
+; 221 - Y-axis stallGuard2 slow threshold
+$221=22
+; 222 - Z-axis stallGuard2 slow threshold
+$222=22
+; 338 - Trinamic driver
+$338=7
+; 339 - Sensorless homing
+$339=0
+; 341 - Tool change mode
+$341=0
+; 342 - Tool change probing distance
+$342=30.0
+; 343 - Tool change locate feed rate
+$343=25.0
+; 344 - Tool change search seek rate
+$344=200.0
+; 345 - Tool change probe pull-off rate
+$345=200.0
+; 346 - Restore position after M6
+$346=1
+; 347 - Dual axis length fail
+$347=5.0
+; 348 - Dual axis length fail min
+$348=2.500
+; 349 - Dual axis length fail max
+$349=25.000
+; 370 - Invert I/O Port inputs
+$370=0
+; 372 - Invert I/O Port outputs
+$372=0
+; 374 - ModBus baud rate
+$374=2
+; 375 - ModBus RX timeout
+$375=50
+; 384 - Disable G92 persistence
+$384=0
+; 395 - Default spindle
+$395=0
+; 398 - Planner buffer blocks
+$398=128
+; 460 - ModBus address
+$460=1
+; 461 - RPM per Hz
+$461=60
+; 462 - Run/Stop Register (decimal)
+$462=8192
+; 463 - Set Frequency Register (decimal)
+$463=8193
+; 464 - Get Frequency Register (decimal)
+$464=8451
+; 465 - Run CW Command (decimal)
+$465=18
+; 466 - Run CCW Command (decimal)
+$466=34
+; 467 - Stop Command (decimal)
+$467=1
+; 468 - RPM input Multiplier
+$468=50
+; 469 - RPM input Divider
+$469=60
+; 470 - RPM output Multiplier
+$470=60
+; 471 - RPM output Divider
+$471=100
+; 481 - Autoreport interval
+$481=0
+%
