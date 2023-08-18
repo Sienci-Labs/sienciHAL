@@ -151,6 +151,31 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
   */
 void SystemInit(void)
 {
+
+    #if BOARD_LONGBOARD32
+
+    if ( *((unsigned long *)0x2003FFF0) == 0xDEADBEEF ) {
+      *((unsigned long *)0x2003FFF0) =  0xCAFEFEED; // Reset our trigger    
+    
+    __enable_irq();
+    HAL_RCC_DeInit();
+    HAL_DeInit();
+    SysTick->CTRL = SysTick->LOAD = SysTick->VAL = 0;
+    __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
+
+    const uint32_t p = (*((uint32_t *) 0x1FFF0000));
+    __set_MSP( p );
+
+    void (*SysMemBootJump)(void);
+    SysMemBootJump = (void (*)(void)) (*((uint32_t *) 0x1FFF0004));
+    SysMemBootJump();
+
+    while( 1 ) {}
+
+    }
+
+  #endif
+
   /* FPU settings ------------------------------------------------------------*/
   #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
     SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */

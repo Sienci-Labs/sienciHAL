@@ -47,6 +47,7 @@ MEMORY
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 256K
   FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
   EEPROM_EMUL(xrw)      : ORIGIN = 0x80E0000,   LENGTH = 128K
+  NOINIT (rwx) : ORIGIN = 0x20000000 + 256K - 0x10, LENGTH = 0x10
 }
 
 _FLASH_VectorTable = ORIGIN(FLASH);
@@ -63,6 +64,12 @@ SECTIONS
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
+
+    .noinit (NOLOAD):
+  {
+    /* place all symbols in input sections that start with .noinit */
+    KEEP(*(*.noinit*))
+  } > NOINIT
 
   /* The program code and other data into "FLASH" Rom type memory */
   .text :
