@@ -174,8 +174,10 @@
 #define AUXINPUT3_PIN           15
 
 /*maco pins, aux for now*/
+//macro 1
 #define AUXINPUT4_PORT          GPIOE
 #define AUXINPUT4_PIN           1
+//macro 2
 #define AUXINPUT5_PORT          GPIOE
 #define AUXINPUT5_PIN           0
 
