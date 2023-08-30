@@ -151,8 +151,10 @@ static input_signal_t inputpin[] = {
 #else
     { .id = Input_Reset,          .port = RESET_PORT,         .pin = RESET_PIN,           .group = PinGroup_Control },
 #endif
+#ifdef FEED_HOLD_PORT && CYCLE_START_PORT
     { .id = Input_FeedHold,       .port = FEED_HOLD_PORT,     .pin = FEED_HOLD_PIN,       .group = PinGroup_Control },
     { .id = Input_CycleStart,     .port = CYCLE_START_PORT,   .pin = CYCLE_START_PIN,     .group = PinGroup_Control },
+#endif
 #if SAFETY_DOOR_ENABLE
     { .id = Input_SafetyDoor,     .port = SAFETY_DOOR_PORT,   .pin = SAFETY_DOOR_PIN,     .group = PinGroup_Control },
 #endif
@@ -974,8 +976,10 @@ static control_signals_t systemGetState (void)
 #else
     signals.reset = DIGITAL_IN(RESET_PORT, RESET_PIN);
 #endif
-    signals.feed_hold = DIGITAL_IN(FEED_HOLD_PORT, FEED_HOLD_PIN);
-    signals.cycle_start = DIGITAL_IN(CYCLE_START_PORT, CYCLE_START_PIN);
+    #ifdef FEED_HOLD_PORT && CYCLE_START_PORT
+        signals.feed_hold = DIGITAL_IN(FEED_HOLD_PORT, FEED_HOLD_PIN);
+        signals.cycle_start = DIGITAL_IN(CYCLE_START_PORT, CYCLE_START_PIN);
+    #endif
   #ifdef SAFETY_DOOR_PIN
     signals.safety_door_ajar = DIGITAL_IN(SAFETY_DOOR_PORT, SAFETY_DOOR_PIN);
   #endif
