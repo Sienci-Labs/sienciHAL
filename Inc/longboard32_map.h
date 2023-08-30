@@ -174,20 +174,22 @@
 #define AUXINPUT3_PIN           15
 
 /*maco pins, aux for now*/
-//macro 1
-#define AUXINPUT4_PORT          GPIOE
-#define AUXINPUT4_PIN           1
+//macro 1 (RUN)
+#define AUXINPUT4_PORT          GPIOC
+#define AUXINPUT4_PIN           11
 //macro 2
 #define AUXINPUT5_PORT          GPIOE
-#define AUXINPUT5_PIN           0
+#define AUXINPUT5_PIN           1
+//macro 3
+#define AUXINPUT6_PORT          GPIOE
+#define AUXINPUT6_PIN           0
 
 // Define user-control controls (cycle start, reset, feed hold) input pins.
 #define RESET_PORT              GPIOB
 #define RESET_PIN               12
-#define FEED_HOLD_PORT          GPIOC
-#define FEED_HOLD_PIN           8
-#define CYCLE_START_PORT        GPIOC
-#define CYCLE_START_PIN         11
+//Run re-defined to Aux for Macro function.
+//#define CYCLE_START_PORT        GPIOC
+//#define CYCLE_START_PIN         11
 /* no safety door*/
 
 
