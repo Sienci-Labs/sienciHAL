@@ -28,9 +28,6 @@
 [submodule "bluetooth"]
 	path = bluetooth
 	url = https://github.com/grblHAL/Plugins_Bluetooth
-[submodule "lrndis"]
-	path = lrndis
-	url = git@github.com:andrewmarles/lrndis-grblhal.git
 [submodule "boot_entry"]
 	path = boot_entry
 	url = git@github.com:Sienci-Labs/GRBLHAL_bootloader_plugin.git
