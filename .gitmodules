@@ -31,3 +31,6 @@
 [submodule "boot_entry"]
 	path = boot_entry
 	url = git@github.com:Sienci-Labs/GRBLHAL_bootloader_plugin.git
+[submodule "macros"]
+	path = macros
+	url = git@github.com:Sienci-Labs/grblhal-aux-macros.git
