@@ -3,7 +3,7 @@
 
   Part of grblHAL driver for STM32F4xx
 
-  Copyright (c) 2018-2022 Terje Io
+  Copyright (c) 2018-2023 Terje Io
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,13 +24,13 @@
 #include "i2c.h"
 #include "grbl/hal.h"
 
-#if KEYPAD_ENABLE == 1
-#include "keypad/keypad.h"
-#endif
-
 #if I2C_ENABLE
 
 #ifdef I2C_FASTMODE
+
+#ifndef I2C_KHZ
+#define I2C_KHZ 400
+#endif
 
 #define I2CPORT FMPI2C1
 #define I2C_SCL_PIN 10
@@ -47,6 +47,10 @@
 #define I2C_ER_IRQHandler HAL_FMPI2C_ER_IRQHandler
 
 #else
+
+#ifndef I2C_KHZ
+#define I2C_KHZ 100
+#endif
 
 #define I2C_GPIO GPIOB
 
@@ -95,7 +99,13 @@
 
 static FMPI2C_HandleTypeDef i2c_port = {
     .Instance = I2CPORT,
-    .Init.Timing =0x0010061A, //100 KHz
+#if I2C_KHZ == 100
+    .Init.Timing = 0xC0000E12, //100 KHz
+#elif I2C_KHZ == 1000
+    .Init.Timing = 0x0020081B, //1000 KHz
+#else
+    .Init.Timing = 0x00401650, //400 KHz
+#endif
     .Init.OwnAddress1 = 0,
     .Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT,
     .Init.DualAddressMode = I2C_DUALADDRESS_DISABLE,
@@ -114,7 +124,7 @@ FMPI2C_HandleTypeDef *I2C_GetPort (void)
 
 static I2C_HandleTypeDef i2c_port = {
     .Instance = I2CPORT,
-    .Init.ClockSpeed = 100000,
+    .Init.ClockSpeed = I2C_KHZ * 1000,
     .Init.DutyCycle = I2C_DUTYCYCLE_2,
     .Init.OwnAddress1 = 0,
     .Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT,
@@ -130,6 +140,9 @@ I2C_HandleTypeDef *I2C_GetPort (void)
 }
 
 #endif
+
+static uint8_t keycode = 0;
+static keycode_callback_ptr keypad_callback = NULL;
 
 void i2c_init (void)
 {
@@ -184,7 +197,22 @@ void i2c_init (void)
     hal.periph_port.register_pin(&sda);
 }
 
-bool I2C_Send (uint32_t i2cAddr, uint8_t *buf, uint16_t size, bool block)
+bool i2c_probe (uint_fast16_t i2cAddr)
+{
+    //wait for bus to be ready
+    while (I2C_GetState(&i2c_port) != I2C_STATE_READY) {
+        if(!hal.stream_blocking_callback())
+            return false;
+    }
+
+#ifdef I2C_FASTMODE
+    return HAL_FMPI2C_IsDeviceReady(&i2c_port, i2cAddr << 1, 4, 10) == HAL_OK;
+#else
+    return HAL_I2C_IsDeviceReady(&i2c_port, i2cAddr << 1, 4, 10) == HAL_OK;
+#endif
+}
+
+bool i2c_send (uint_fast16_t i2cAddr, uint8_t *buf, size_t size, bool block)
 {
     //wait for bus to be ready
     while (I2C_GetState(&i2c_port) != I2C_STATE_READY) {
@@ -202,6 +230,14 @@ bool I2C_Send (uint32_t i2cAddr, uint8_t *buf, uint16_t size, bool block)
     }
 
     return ok;
+}
+
+void i2c_get_keycode (uint_fast16_t i2cAddr, keycode_callback_ptr callback)
+{
+    keycode = 0;
+    keypad_callback = callback;
+
+    I2C_Master_Receive_IT(&i2c_port, i2cAddr << 1, &keycode, 1);
 }
 
 void I2C_IRQEVT_Handler (void)
@@ -248,19 +284,6 @@ nvs_transfer_result_t i2c_nvs_transfer (nvs_transfer_t *i2c, bool read)
 
 #endif // EEPROM_ENABLE
 
-#if KEYPAD_ENABLE == 1
-
-static uint8_t keycode = 0;
-static keycode_callback_ptr keypad_callback = NULL;
-
-void I2C_GetKeycode (uint32_t i2cAddr, keycode_callback_ptr callback)
-{
-    keycode = 0;
-    keypad_callback = callback;
-
-    I2C_Master_Receive_IT(&i2c_port, KEYPAD_I2CADDR << 1, &keycode, 1);
-}
-
 #ifdef I2C_FASTMODE
 void HAL_FMPI2C_MasterRxCpltCallback (FMPI2C_HandleTypeDef *hi2c)
 #else
@@ -272,8 +295,6 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
         keypad_callback = NULL;
     }
 }
-
-#endif // KEYPAD_ENABLE == 1
 
 #if TRINAMIC_ENABLE && TRINAMIC_I2C
 

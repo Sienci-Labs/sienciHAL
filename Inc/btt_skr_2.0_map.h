@@ -23,20 +23,27 @@
 #error "BTT SKR-2 supports 5 motors max."
 #endif
 
-#if !defined(STM32F407xx) || HSE_VALUE != 8000000
-#error "This board has STM32F407 processor with a 8MHz crystal, select a corresponding build!"
+#if !(defined(STM32F407xx) || defined(STM32F429xx)) || HSE_VALUE != 8000000
+#error "This board has a STM32F407 or STM32F429 processor with a 8MHz crystal, select a corresponding build!"
 #endif
 
 #define BOARD_NAME "BTT SKR-2"
 #define BOARD_URL "https://github.com/bigtreetech/SKR-2"
 #define HAS_BOARD_INIT
 
-#define I2C_PORT 1      // GPIOB, SCL_PIN = 8, SDA_PIN = 9
+#define I2C_PORT    1       // GPIOB, SCL_PIN = 8, SDA_PIN = 9
 //#define I2C1_ALT_PINMAP // GPIOB, SCL_PIN = 6, SDA_PIN = 7
+#if ETHERNET_ENABLE
+#define SPI_PORT    2       // GPIOB, SCK_PIN = 13, MISO_PIN = 14, MOSI_PIN = 15
+#endif
+
+#if TRINAMIC_SPI_ENABLE && ETHERNET_ENABLE
+#error "Trinamic SPI driver plugin and networking plugins cannot be enabled together!"
+#endif
 
 // If we want to debug, we need to use USART1
 #if defined(DEBUG) && defined(USB_SERIAL_CDC)
-#undef USB_SERIAL_CDC
+//#undef USB_SERIAL_CDC
 #endif
 
 // Define step pulse output pins.
@@ -146,10 +153,19 @@
 #define STEPPERS_POWER_PORT         GPIOC
 #define STEPPERS_POWER_PIN          13
 
-// XXXXX
-// SKR-2 has SD/MMC interface and does not work in SPI mode
 #if SDCARD_ENABLE
-#error "SD SDIO/MMC interface does not support SPI."
+#define SDCARD_SDIO                 1
+#endif
+
+#if ETHERNET_ENABLE
+#undef SPI_ENABLE
+#define SPI_ENABLE 1
+#define SPI_CS_PORT                 GPIOB
+#define SPI_CS_PIN                  12                              // ESP-CS
+#define SPI_IRQ_PORT                GPIOB
+#define SPI_IRQ_PIN                 10                              // ESP-IO0
+#define SPI_RST_PORT                GPIOB
+#define SPI_RST_PIN                 11                              // ESP-IO1
 #endif
 
 #if TRINAMIC_UART_ENABLE

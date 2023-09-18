@@ -10,10 +10,16 @@ src_dir = Src
 build_flags =
   -I .
   -I FatFs
+  -I FatFs/STM
+  -I Drivers/FATFS/Target
   -I Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
   -I Middlewares/ST/STM32_USB_Device_Library/Core/Inc
+  -I USB_DEVICE/App
   -I USB_DEVICE/Target
   -D OVERRIDE_MY_MACHINE
+  -D _USE_IOCTL=1
+  -D _USE_WRITE=1
+  -D _VOLUMES=1
 lib_deps =
   bluetooth
   grbl
@@ -22,19 +28,33 @@ lib_deps =
   motors
   trinamic
   odometer
+  fans
   FatFs
   sdcard
   spindle
+  Drivers/FATFS/App
+  Drivers/FATFS/Target
   # USB serial support
-  Core
-  Class
-  App
-  Target
+  Middlewares/ST/STM32_USB_Device_Library/Core
+  Middlewares/ST/STM32_USB_Device_Library/Class
+  USB_DEVICE/App
+  USB_DEVICE/Target
 lib_extra_dirs =
   .
   FatFs
   Middlewares/ST/STM32_USB_Device_Library
   USB_DEVICE
+
+[eth_networking]
+build_flags =
+  # Floating point support for printf, required for WebUI v3
+  -Wl,-u,_printf_float
+  -I lwip/src/include
+  -I networking/wiznet
+lib_deps =
+   lwip
+   networking
+lib_extra_dirs =
 
 [env]
 platform = ststm32
@@ -51,4 +71,5 @@ build_flags = ${common.build_flags}
 %build_flags%
 lib_deps = ${common.lib_deps}
   eeprom
+%lib_deps%
 lib_extra_dirs = ${common.lib_extra_dirs}

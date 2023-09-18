@@ -116,8 +116,8 @@
 #define M5_STEP_PIN                 13
 #define M5_DIRECTION_PORT           GPIOG
 #define M5_DIRECTION_PIN            9
-//#define M5_LIMIT_PORT               GPIOG
-//#define M5_LIMIT_PIN                5
+#define M5_LIMIT_PORT               GPIOG
+#define M5_LIMIT_PIN                5
 #define M5_ENABLE_PORT              GPIOF
 #define M5_ENABLE_PIN               0
 #endif
@@ -139,25 +139,14 @@
 #define COOLANT_MIST_PIN            14                          // HEAT1
 
 // Define user-control controls (cycle start, reset, feed hold) input pins.
-#if N_AXIS > 3
-#define RESET_PORT                  GPIOF
-#define RESET_PIN                   13                          // EXP2 PF13
-#define FEED_HOLD_PORT              GPIOF
-#define FEED_HOLD_PIN               11                          // EXP2 PF11
-#define CYCLE_START_PORT            GPIOB
-#define CYCLE_START_PIN             15                          // EXP2 PB15
-#else
 #define RESET_PORT                  GPIOG
-#define RESET_PIN                   4                           // E0 Limit
+#define RESET_PIN                   6                           // EXP1 PG6
 #define FEED_HOLD_PORT              GPIOD
-#define FEED_HOLD_PIN               11                          // E1 Limit
+#define FEED_HOLD_PIN               11                          // EXP1 PD11
 #define CYCLE_START_PORT            GPIOG
-#define CYCLE_START_PIN             2                           // E2 Limit
-#endif
-#if SAFETY_DOOR_ENABLE
+#define CYCLE_START_PIN             2                           // EXP1 PG2
 #define SAFETY_DOOR_PORT            GPIOG
-#define SAFETY_DOOR_PIN             6                           // EXP1 PG4
-#endif
+#define SAFETY_DOOR_PIN             4                           // EXP1 PG4
 #define CONTROL_INMODE GPIO_BITBAND
 
 // Define probe switch input pin.
@@ -212,7 +201,7 @@
 
 #if TRINAMIC_SPI_ENABLE
 
-// SPI3 is used: GPIOC pin 10, 11 and 12
+#define TRINAMIC_SPI_PORT           3 // GPIOC, SCK_PIN = 10, MISO_PIN = 12, MOSI_PIN = 11
 
 #define MOTOR_CSX_PORT              GPIOA
 #define MOTOR_CSX_PIN               15

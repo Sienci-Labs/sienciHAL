@@ -3,7 +3,7 @@
 
   Part of grblHAL
 
-  Copyright (c) 2020-2022 Terje Io
+  Copyright (c) 2020-2023 Terje Io
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -31,16 +31,25 @@
 #error "Axis configuration is not supported!"
 #endif
 
+#if SDCARD_ENABLE && ETHERNET_ENABLE
+#error "SD card and networking plugins cannot be enabled together!"
+#endif
+
 #define BOARD_NAME "Nucleo-64 CNC Breakout"
 
+#ifndef WEB_BUILD
 #undef I2C_ENABLE
 #undef EEPROM_ENABLE
 //#undef EEPROM_IS_FRAM
-
 #define I2C_ENABLE      1
-#define I2C_PORT        1
-#define EEPROM_ENABLE   1
+#define EEPROM_ENABLE   0
 //#define EEPROM_IS_FRAM  1
+#endif
+
+#if I2C_ENABLE
+#define I2C_PORT        1 // PB8 = SCK, PB9 = SDA
+#endif
+
 //#undef SPINDLE_SYNC_ENABLE
 //#define SPINDLE_SYNC_ENABLE 1
 
@@ -48,7 +57,7 @@
 #define HAS_IOPORTS
 #define HAS_BOARD_INIT
 
-#if SDCARD_ENABLE || TRINAMIC_SPI_ENABLE
+#if SDCARD_ENABLE || TRINAMIC_SPI_ENABLE || ETHERNET_ENABLE
 #define SPI_PORT                1 // GPIOA, SCK_PIN = 5, MISO_PIN = 6, MOSI_PIN = 7
 #endif
 
@@ -158,25 +167,48 @@
 #endif
 
 // Auxiliary I/O
+#if QEI_ENABLE
+#define QEI_A_PORT              GPIOA
+#define QEI_A_PIN               15
+#define QEI_B_PORT              GPIOB
+#define QEI_B_PIN               14
+ #if QEI_SELECT_ENABLED
+  #if !I2C_STROBE_ENABLE
+    #define QEI_SELECT_PORT     GPIOB
+    #define QEI_SELECT_PIN      0
+    #define I2C_STROBE_ASSIGNED
+  #elif !SAFETY_DOOR_ENABLE
+    #define QEI_SELECT_PORT     GPIOC
+    #define QEI_SELECT_PIN      1
+  #endif
+ #endif
+#define AUXINPUT0_PORT          GPIOB
+#define AUXINPUT0_PIN           13
+#else
 #define AUXINPUT0_PORT          GPIOB
 #define AUXINPUT0_PIN           14
 #define AUXINPUT1_PORT          GPIOA
 #define AUXINPUT1_PIN           15
 #define AUXINPUT2_PORT          GPIOB
 #define AUXINPUT2_PIN           13
+#endif
 
 #define AUXOUTPUT0_PORT         GPIOB
 #define AUXOUTPUT0_PIN          15
+#if !ETHERNET_ENABLE
 #define AUXOUTPUT1_PORT         GPIOB
 #define AUXOUTPUT1_PIN          2
+#endif
 
 #if I2C_STROBE_ENABLE
 #define I2C_STROBE_PORT         GPIOB
 #define I2C_STROBE_PIN          0
-#else
+#elif !defined(I2C_STROBE_ASSIGNED)
 #define AUXINPUT3_PORT          GPIOB
 #define AUXINPUT3_PIN           0
 #endif
+
+#undef I2C_STROBE_ASSIGNED
 
 #ifdef SPI_PORT
 
@@ -188,6 +220,17 @@
 #if TRINAMIC_SPI_ENABLE
 #define MOTOR_CS_PORT           GPIOB
 #define MOTOR_CS_PIN            7
+#endif
+
+#if ETHERNET_ENABLE
+#undef SPI_ENABLE
+#define SPI_ENABLE 1
+#define SPI_CS_PORT             GPIOC
+#define SPI_CS_PIN              8
+#define SPI_IRQ_PORT            GPIOB
+#define SPI_IRQ_PIN             0
+#define SPI_RST_PORT            GPIOB // AUXOUTPUT1
+#define SPI_RST_PIN             2
 #endif
 
 #else
