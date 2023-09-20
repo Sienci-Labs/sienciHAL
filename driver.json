@@ -248,6 +248,29 @@
       }
     },
     {
+      "name": "Longboard32",
+      "symbol": "BOARD_LONGBOARD32",
+      "URL": "https://github.com/Sienci-Labs/SuperLongBoard",
+      "MAP": "Inc/longboard32_map.h",
+      "caps": {
+        "axes": 5,
+        "auto_square": 2,
+        "digital_in": 3,
+        "digital_out": 4,
+        "eeprom": -2,
+        "fram": 0,
+        "i2c": 1,
+        "sdcard": 1,
+        "keypad": 1,
+        "pio_board": "genericSTM32F412VG",
+        "ldscript": "STM32F412VGTX_FLASH.ld"
+      },
+      "symbols": {
+          "STM32F446xx": "",
+          "HAS_BOOTLOADER": ""
+      }
+    },    
+    {
       "name": "Fysetc S6 V2.0",
       "symbol": "BOARD_FYSETC_S6",
       "URL": "https://wiki.fysetc.com/FYSETC_S6/",

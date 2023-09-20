@@ -222,8 +222,22 @@
 #define MOTOR_CSM3_PIN              12
 #endif
 
+#if SDCARD_ENABLE || ETHERNET_ENABLE
+#define SPI_PORT                1 // GPIOA, SCK_PIN = 5, MISO_PIN = 6, MOSI_PIN = 7  probably needs fixing
+#endif
+
+#if ETHERNET_ENABLE
+#undef SPI_ENABLE
+#define SPI_ENABLE 1
+#define SPI_CS_PORT             GPIOA //CS_JOG_SW
+#define SPI_CS_PIN              4
+#define SPI_IRQ_PORT            GPIOA //RXD_INT
+#define SPI_IRQ_PIN             10
+#define SPI_RST_PORT            GPIOA // TXD_INT
+#define SPI_RST_PIN             9
+#endif
+
 #if SDCARD_ENABLE
-#define SD_CS_PORT              GPIOA
-#define SD_CS_PIN               3
-#define SPI_PORT                1 // GPIOA, SCK_PIN = 5, MISO_PIN = 6, MOSI_PIN = 7
+#define SD_CS_PORT              GPIOB
+#define SD_CS_PIN               15
 #endif
