@@ -579,7 +579,7 @@ static bool serial2SetBaudRate (uint32_t baud_rate)
 {
     UART2->CR1 = USART_CR1_RE|USART_CR1_TE;
     #if(BOARD_LONGBOARD32) //do not know exactly why this is needed, all other timings look correct.
-        UART2->BRR = UART_BRR_SAMPLING16(UART2_CLK/2, baud_rate);
+        UART2->BRR = UART_BRR_SAMPLING16(UART2_CLK, baud_rate);
     #else
         UART2->BRR = UART_BRR_SAMPLING16(UART2_CLK/2, baud_rate);
     #endif
