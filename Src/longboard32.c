@@ -107,7 +107,7 @@ inline static void delay (void)
 
 static uint8_t spi_get_byte (void)
 {
-    spi_port.Instance->DR = 0xFF; // Writing dummy data into Data register
+    spi_port.Instance->DR = 0x04; // Writing dummy data into Data register
 
     while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_RXNE));
 
@@ -129,6 +129,8 @@ static uint8_t spi_put_byte (uint8_t byte)
 TMC_spi_status_t tmc2660_spi_read (trinamic_motor_t driver, TMC2660_spi_datagram_t *datagram)
 {
     TMC_spi_status_t status;
+
+
     
     #if 1
 
@@ -142,6 +144,26 @@ TMC_spi_status_t tmc2660_spi_read (trinamic_motor_t driver, TMC2660_spi_datagram
 
     delay();
     DIGITAL_OUT(cs[driver.id].port, cs[driver.id].pin, 1);
+
+    datagram->payload.value = (datagram->payload.value>>4) & 0xFFFFFF;
+
+    // Initialize the result
+    /*uint32_t result = 0;
+
+    // Reverse the bits
+    for (int i = 0; i < 20; i++) {
+        // Shift the result to the left
+        result <<= 1;
+
+        // Extract the rightmost bit from the bottom20Bits and add it to the result
+        result |= (datagram->payload.value & 1);
+
+        // Shift the bottom20Bits to the right
+        datagram->payload.value >>= 1;
+    }
+
+    datagram->payload.value = result;
+    */
 
     status = 1;
     #endif
