@@ -99,7 +99,7 @@ static struct {
 // XXXXX replace with something better...
 inline static void delay (void)
 {
-    volatile uint32_t dly = 100;
+    volatile uint32_t dly = 10;
 
     while(--dly)
         __ASM volatile ("nop");
