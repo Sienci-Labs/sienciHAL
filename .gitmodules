@@ -49,3 +49,6 @@
 [submodule "macros"]
 	path = macros
 	url = git@github.com:Sienci-Labs/grblhal-aux-macros.git
+[submodule "rgb"]
+	path = rgb
+	url = https://github.com/Sienci-Labs/grblhal-rgb-plugin.git

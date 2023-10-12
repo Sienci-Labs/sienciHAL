@@ -30,12 +30,15 @@
 #define BOARD_NAME "Longboard32"
 #define BOARD_URL "Sienci Longboard32"
 
+#if SLB_EEPROM_ENABLE
 #undef I2C_ENABLE
 #undef EEPROM_ENABLE
 
-//#define I2C_ENABLE 1
-//#define I2C_FASTMODE
-//#define EEPROM_ENABLE 2
+#define I2C_ENABLE 1
+#define EEPROM_ENABLE 2
+#define I2C_PORT 1
+#define I2C1_ALT_PINMAP 1
+#endif
 #define HAS_IOPORTS
 
 #define HAS_BOARD_INIT
@@ -158,10 +161,17 @@
 #define MODBUS_DIR_AUX          4
 
 /* temporary defines for additional laser pins*/
-#define AUXOUTPUT5_PORT         GPIOC //laser PWM pin
-#define AUXOUTPUT5_PIN          6     //laser PWM pin
-#define AUXOUTPUT6_PORT         GPIOC //laser EN pin
-#define AUXOUTPUT6_PIN          12    //laser EN pin
+#define AUXOUTPUT5_PORT         GPIOC //laser EN pin
+#define AUXOUTPUT5_PIN          12    //laser EN pin
+
+/*defines for neopixel bitbang pins*/
+#define AUXOUTPUT6_PORT         GPIOC //ring LED strip
+#define AUXOUTPUT6_PIN          9    //ring LED strip
+#define AUXOUTPUT7_PORT         GPIOA //rail LED strip
+#define AUXOUTPUT7_PIN          13    //rail LED strip
+#define RING_LED_AUXOUT         6
+#define RAIL_LED_AUXOUT         7
+
 #define AUXOUTPUT_OUTMODE       GPIO_BITBAND
 
 #define AUXINPUT0_PORT          GPIOD
