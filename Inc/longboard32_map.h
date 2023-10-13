@@ -165,12 +165,12 @@
 #define AUXOUTPUT5_PIN          12    //laser EN pin
 
 /*defines for neopixel bitbang pins*/
-#define AUXOUTPUT6_PORT         GPIOC //ring LED strip
-#define AUXOUTPUT6_PIN          9    //ring LED strip
-#define AUXOUTPUT7_PORT         GPIOA //rail LED strip
-#define AUXOUTPUT7_PIN          13    //rail LED strip
-#define RING_LED_AUXOUT         6
-#define RAIL_LED_AUXOUT         7
+#define AUXOUTPUT6_PORT         GPIOC //rail LED strip
+#define AUXOUTPUT6_PIN          9    //rail LED strip
+//#define AUXOUTPUT7_PORT         GPIOA //ring LED strip
+//#define AUXOUTPUT7_PIN          13    //ring LED strip
+//#define RING_LED_AUXOUT         7
+#define RAIL_LED_AUXOUT         6
 
 #define AUXOUTPUT_OUTMODE       GPIO_BITBAND
 
