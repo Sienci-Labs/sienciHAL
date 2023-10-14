@@ -296,6 +296,14 @@ void board_init (void)
     i2c_port = I2C_GetPort();
     #endif
 
+    //set PA13 to output, it is AF SWDIO on reset.
+    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+
     static trinamic_driver_if_t driver_if = {.on_drivers_init = if_init};
 
     trinamic_if_init(&driver_if);
