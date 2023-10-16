@@ -297,7 +297,7 @@ void board_init (void)
     #endif
 
     //set PA13 to output, it is AF SWDIO on reset.
-#if AUXOUTPUT7_PORT    
+#if AUXOUTPUT7_PIN    
     GPIO_InitStruct.Pin = GPIO_PIN_13;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
