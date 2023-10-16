@@ -95,7 +95,7 @@
 #define LIMIT_INMODE            GPIO_BITBAND
 
 // Define ganged axis or A axis step pulse and step direction output pins.
-#if N_ABC_MOTORS > 0
+#if (N_ABC_MOTORS > 0) && (N_AXIS == 3)
 #define M3_AVAILABLE
 #define M3_STEP_PORT            GPIOE
 #define M3_STEP_PIN             5
@@ -108,16 +108,29 @@
 #endif
 
 // Define ganged axis or A axis step pulse and step direction output pins.
-#if N_ABC_MOTORS == 2
+//note that because of how GRBLHAL iterates the axes, the M3 and M4 need to swap
+#if (N_ABC_MOTORS == 2) && (N_AXIS == 4)
+
 #define M4_AVAILABLE
-#define M4_STEP_PORT            GPIOB
-#define M4_STEP_PIN             10
+#define M4_STEP_PORT            GPIOE
+#define M4_STEP_PIN             5
 #define M4_DIRECTION_PORT       GPIOE
-#define M4_DIRECTION_PIN        11
+#define M4_DIRECTION_PIN        10
 #define M4_LIMIT_PORT           GPIOE
-#define M4_LIMIT_PIN            14
+#define M4_LIMIT_PIN            6
 #define M4_ENABLE_PORT          GPIOC
-#define M4_ENABLE_PIN           10
+#define M4_ENABLE_PIN           7
+
+#define M3_AVAILABLE
+#define M3_STEP_PORT            GPIOB
+#define M3_STEP_PIN             10
+#define M3_DIRECTION_PORT       GPIOE
+#define M3_DIRECTION_PIN        11
+#define M3_LIMIT_PORT           GPIOE
+#define M3_LIMIT_PIN            14
+#define M3_ENABLE_PORT          GPIOC
+#define M3_ENABLE_PIN           10
+
 #endif
 
 // Define spindle enable and spindle direction output pins.
@@ -165,10 +178,12 @@
 #define AUXOUTPUT5_PIN          12    //laser EN pin
 
 /*defines for neopixel bitbang pins*/
+#if STATUS_LIGHT_ENABLE
 #define AUXOUTPUT6_PORT         GPIOC //rail LED strip
 #define AUXOUTPUT6_PIN          9    //rail LED strip
 #define AUXOUTPUT7_PORT         GPIOA //ring LED strip
 #define AUXOUTPUT7_PIN          13    //ring LED strip
+#endif
 #define RING_LED_AUXOUT         7
 #define RAIL_LED_AUXOUT         6
 
@@ -227,9 +242,14 @@
 #define MOTOR_CSZ_PORT              GPIOD
 #define MOTOR_CSZ_PIN               9
 
-#ifdef  M3_AVAILABLE
+#if (N_ABC_MOTORS > 0) && (N_AXIS == 3)
 #define MOTOR_CSM3_PORT             GPIOE
 #define MOTOR_CSM3_PIN              12
+#endif
+
+#if (N_ABC_MOTORS == 2) && (N_AXIS == 4)
+#define MOTOR_CSM4_PORT             GPIOE
+#define MOTOR_CSM4_PIN              12
 #endif
 
 #if SDCARD_ENABLE || ETHERNET_ENABLE

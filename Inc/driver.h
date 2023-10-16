@@ -589,10 +589,10 @@
 #endif
 
 #if TRINAMIC_ENABLE
-  #include "motors/trinamic.h"
   #ifndef TRINAMIC_MIXED_DRIVERS
     #define TRINAMIC_MIXED_DRIVERS 1
   #endif
+  #include "motors/trinamic.h"
 #endif
 
 // End configuration
