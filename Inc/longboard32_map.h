@@ -150,8 +150,6 @@
 #define SPINDLE_PWM_PIN         8
 #endif
 
-
-
 // Define flood and mist coolant enable output pins.
 #define COOLANT_FLOOD_PORT      GPIOB
 #define COOLANT_FLOOD_PIN       14
@@ -195,7 +193,9 @@
 #define AUXINPUT1_PIN           13
 #define AUXINPUT2_PORT          GPIOD
 #define AUXINPUT2_PIN           14
-#define AUXINPUT3_PORT          GPIOD
+
+/*TLS/PRB DET pin*/
+#define AUXINPUT3_PORT          GPIOC
 #define AUXINPUT3_PIN           15
 
 /*maco pins, aux for now*/
@@ -209,18 +209,17 @@
 #define AUXINPUT6_PORT          GPIOE
 #define AUXINPUT6_PIN           0
 
+//not currently supported in GRBLHAL
+//#define AUXINPUT7_PORT          GPIOD
+//#define AUXINPUT7_PIN           15
+
 // Define user-control controls (cycle start, reset, feed hold) input pins.
 #define RESET_PORT              GPIOB
 #define RESET_PIN               12
-//Run re-defined to Aux for Macro function.
-//#define CYCLE_START_PORT        GPIOC
-//#define CYCLE_START_PIN         11
 #if SAFETY_DOOR_ENABLE
 #define SAFETY_DOOR_PORT        GPIOD
 #define SAFETY_DOOR_PIN         7
 #endif
-
-
 #define CONTROL_INMODE          GPIO_BITBAND
 
 // Define probe switch input pin.
