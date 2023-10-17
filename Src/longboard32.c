@@ -36,44 +36,6 @@
 SPI_HandleTypeDef hspi2 = {0};
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-//#if KEYPAD_ENABLE || EEPROM_ENABLE
-#if 0
-
-static uint8_t keycode = 0;
-static keycode_callback_ptr keypad_callback = NULL;
-static bool pendant_tx_active = 0;
-
-static FMPI2C_HandleTypeDef *i2c_port;
-
-
-void HAL_FMPI2C_MemRxCpltCallback(FMPI2C_HandleTypeDef *hi2c)
-{
-    if(keypad_callback && keycode != 0) {
-        keypad_callback(keycode);
-        keypad_callback = NULL;
-    }
-}
-
-void HAL_FMPI2C_MasterTxCpltCallback(FMPI2C_HandleTypeDef *hi2c)
-{
-    pendant_tx_active = 0;
-}
-
-// called from stream drivers while tx is blocking, returns false to terminate
-
-#if 0
-bool flexi_stream_tx_blocking (void)
-{
-    // TODO: Restructure st_prep_buffer() calls to be executed here during a long print.
-
-    grbl.on_execute_realtime(state_get());
-
-    return !(sys.rt_exec_state & EXEC_RESET);
-}
-#endif
-
-#endif //keypad enable
-
 #include "trinamic/common.h"
 
 static SPI_HandleTypeDef spi_port = {
@@ -103,15 +65,6 @@ inline static void delay (void)
 
     while(--dly)
         __ASM volatile ("nop");
-}
-
-static uint8_t tmc2660_spi_get_byte (void)
-{
-    spi_port.Instance->DR = 0x04; // Writing dummy data into Data register
-
-    while(!__HAL_SPI_GET_FLAG(&spi_port, SPI_FLAG_RXNE));
-
-    return (uint8_t)spi_port.Instance->DR;
 }
 
 static uint8_t tmc2660_spi_put_byte (uint8_t byte)
@@ -311,23 +264,41 @@ void board_init (void)
 
     trinamic_if_init(&driver_if);
 #endif    
- //   if_init(4, i);
 
-    /* set default values to TMC2660 drivers*/
-/*
-    for (i=0; i < 4; i++){
+#if SIENCI_LASER_PWM
 
-    tmc2660_writeInt(i, TMC2660_DRVCONF,  0x000205);
-	tmc2660_writeInt(i, TMC2660_DRVCTRL,  0x080000);
-	tmc2660_writeInt(i, TMC2660_CHOPCONF, 0x0A0747);
-	tmc2660_writeInt(i, TMC2660_SMARTEN,  0x0C0214);
-	tmc2660_writeInt(i, TMC2660_SGCSCONF, 0x0EF00E); //always append E
+    GPIO_InitStruct.Pin = 1 << LASER_ENABLE_PIN; 
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(LASER_ENABLE_PORT, &GPIO_InitStruct);
+    __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    }
-*/
-    //add some init code for neopixel?
+    LASER_PWM_CLOCK_ENA();
 
-    
+    GPIO_InitTypeDef GPIO_Init = {
+        .Speed = GPIO_SPEED_FREQ_HIGH,
+        .Mode = GPIO_MODE_OUTPUT_PP
+    };    
+
+    GPIO_Init.Pin = (1 << SPINDLE_PWM_PIN);
+    GPIO_Init.Mode = GPIO_MODE_AF_PP;
+    GPIO_Init.Pull = GPIO_NOPULL;
+    GPIO_Init.Alternate = LASER_PWM_AF;
+    HAL_GPIO_Init(LASER_PWM_PORT, &GPIO_Init);
+
+    /*static const periph_pin_t pwm = {
+        .function = Output_SpindlePWM,
+        .group = PinGroup_SpindlePWM,
+        .port = LASER_PWM_PORT,
+        .pin = LASER_PWM_PIN,
+        .mode = { .mask = PINMODE_OUTPUT }
+    };
+
+    hal.periph_port.register_pin(&pwm);*/
+
+
+#endif
 
 }
 

@@ -2191,7 +2191,6 @@ static bool driver_setup (settings_t *settings)
     }
 
   // Spindle init
-
 #ifdef SPINDLE_PWM_TIMER_N
 
     SPINDLE_PWM_CLOCK_ENA();

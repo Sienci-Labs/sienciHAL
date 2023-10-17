@@ -142,13 +142,15 @@
 
 // Define spindle PWM output pin.
 #ifdef SIENCI_LASER_PWM
-#define SPINDLE_PWM_PORT_BASE   GPIOC_BASE
-#define SPINDLE_PWM_PIN         6
+#define LASER_ENABLE_PORT     GPIOC
+#define LASER_ENABLE_PIN      12
+#define LASER_PWM_PORT_BASE   GPIOC_BASE
+#define LASER_PWM_PIN         6
 //#define SPINDLE_PWM_TIMER_N     3
-#else
+#endif
 #define SPINDLE_PWM_PORT_BASE   GPIOA_BASE
 #define SPINDLE_PWM_PIN         8
-#endif
+
 
 // Define flood and mist coolant enable output pins.
 #define COOLANT_FLOOD_PORT      GPIOB
@@ -270,3 +272,32 @@
 #define SD_CS_PORT              GPIOB
 #define SD_CS_PIN               15
 #endif
+
+  #if LASER_PWM_PIN == 6 // PC6 - TIM3_CH1N
+    #define LASER_PWM_TIMER_N     3
+    #define LASER_PWM_TIMER_CH    1
+    #define LASER_PWM_TIMER_INV   0
+    #define LASER_PWM_TIMER_AF    2
+  #endif
+
+    #define LASER_PWM_CCR 1
+
+    #define LASER_PWM_TIMER           timer(LASER_PWM_TIMER_N)
+    #define LASER_PWM_TIMER_CCR       timerCCR(LASER_PWM_TIMER_N, LASER_PWM_TIMER_CH)
+    #define LASER_PWM_TIMER_CCMR      timerCCMR(LASER_PWM_TIMER_N, LASER_PWM_CCR)
+    #define LASER_PWM_CCMR_OCM_SET    timerOCM(LASER_PWM_CCR, LASER_PWM_TIMER_CH)
+    #define LASER_PWM_CCMR_OCM_CLR    timerOCMC(LASER_PWM_CCR, LASER_PWM_TIMER_CH)
+    
+    #if LASER_PWM_TIMER_INV
+    #define LASER_PWM_CCER_EN         timerCCEN(LASER_PWM_TIMER_CH, N)
+    #define LASER_PWM_CCER_POL        timerCCP(LASER_PWM_TIMER_CH, N)
+    #define LASER_PWM_CR2_OIS         timerCR2OIS(LASER_PWM_TIMER_CH, N)
+    #else
+    #define LASER_PWM_CCER_EN         timerCCEN(LASER_PWM_TIMER_CH, )
+    #define LASER_PWM_CCER_POL        timerCCP(LASER_PWM_TIMER_CH, )
+    #define LASER_PWM_CR2_OIS         timerCR2OIS(LASER_PWM_TIMER_CH, )
+    #endif
+
+    #define LASER_PWM_PORT            ((GPIO_TypeDef *)LASER_PWM_PORT_BASE)
+    #define LASER_PWM_AF              timerAF(LASER_PWM_TIMER_N, LASER_PWM_TIMER_AF)
+    #define LASER_PWM_CLOCK_ENA       timerCLKENA(LASER_PWM_TIMER_N) 
