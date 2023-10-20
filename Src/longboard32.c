@@ -281,7 +281,7 @@ void board_init (void)
         .Mode = GPIO_MODE_OUTPUT_PP
     };    
 
-    GPIO_Init.Pin = (1 << SPINDLE_PWM_PIN);
+    GPIO_Init.Pin = (1 << LASER_PWM_PIN);
     GPIO_Init.Mode = GPIO_MODE_AF_PP;
     GPIO_Init.Pull = GPIO_NOPULL;
     GPIO_Init.Alternate = LASER_PWM_AF;

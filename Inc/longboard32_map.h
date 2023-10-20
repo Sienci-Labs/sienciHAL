@@ -138,7 +138,6 @@
 #define SPINDLE_ENABLE_PIN      13
 #define SPINDLE_DIRECTION_PORT  GPIOB
 #define SPINDLE_DIRECTION_PIN   1
-#define SPINDLE_OUTMODE         GPIO_BITBAND
 
 // Define spindle PWM output pin.
 #ifdef SIENCI_LASER_PWM
