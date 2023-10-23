@@ -52,3 +52,6 @@
 [submodule "rgb"]
 	path = rgb
 	url = https://github.com/Sienci-Labs/grblhal-rgb-plugin.git
+[submodule "probing"]
+	path = probing
+	url = https://github.com/Sienci-Labs/grblhal_probe_plugin.git
