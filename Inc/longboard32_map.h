@@ -242,6 +242,16 @@
 #define MOTOR_CSZ_PORT              GPIOD
 #define MOTOR_CSZ_PIN               9
 
+//stallguard inputs
+#define MOTOR_SGX_PORT              GPIOA
+#define MOTOR_SGX_PIN               15
+#define MOTOR_SGY1_PORT             GPIOA
+#define MOTOR_SGY1_PIN              1
+#define MOTOR_SGZ_PORT              GPIOA
+#define MOTOR_SGZ_PIN               2
+#define MOTOR_SGY2_PORT             GPIOA
+#define MOTOR_SGY2_PIN              3
+
 #if (N_ABC_MOTORS > 0) && (N_AXIS == 3)
 #define MOTOR_CSM3_PORT             GPIOE
 #define MOTOR_CSM3_PIN              12

@@ -286,18 +286,26 @@ void board_init (void)
     GPIO_Init.Pull = GPIO_NOPULL;
     GPIO_Init.Alternate = LASER_PWM_AF;
     HAL_GPIO_Init(LASER_PWM_PORT, &GPIO_Init);
+#endif
 
-    /*static const periph_pin_t pwm = {
-        .function = Output_SpindlePWM,
-        .group = PinGroup_SpindlePWM,
-        .port = LASER_PWM_PORT,
-        .pin = LASER_PWM_PIN,
-        .mode = { .mask = PINMODE_OUTPUT }
-    };
+//initialize I/O for sensorless homing.
+#if TMC_POLL_STALLED
+    GPIO_InitTypeDef GPIO_Init2 = {
+        .Speed = GPIO_SPEED_FREQ_HIGH,
+        .Mode = GPIO_MODE_INPUT,
+        .Pull = GPIO_NOPULL
+    };  
 
-    hal.periph_port.register_pin(&pwm);*/
+    GPIO_Init2.Pin = (1 << MOTOR_SGX_PIN);
+    HAL_GPIO_Init(MOTOR_SGX_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY1_PIN);
+    HAL_GPIO_Init(MOTOR_SGY1_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGZ_PIN);
+    HAL_GPIO_Init(MOTOR_SGZ_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY2_PIN);
+    HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);            
 
-
+    __HAL_RCC_GPIOA_CLK_ENABLE();
 #endif
 
 }

@@ -2555,7 +2555,11 @@ bool driver_init (void)
     };
 
 #ifdef SPINDLE_PWM_TIMER_N
+#if BOARD_LONGBOARD32
+    spindle_id = spindle_register(&spindle, "SLB_SPINDLE");
+#else
     spindle_id = spindle_register(&spindle, "PWM");
+#endif
 #else
     spindle_id = spindle_register(&spindle, "Basic");
 #endif
