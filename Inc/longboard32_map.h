@@ -1,5 +1,5 @@
 /*
-  flexi_hal_map.h - driver code for STM32F4xx ARM processors
+  longboard32_map.h - driver code for STM32F4xx ARM processors
 
   Part of grblHAL
 
@@ -24,11 +24,11 @@
 #endif
 
 #if !defined(STM32F412Vx) || HSE_VALUE != 25000000
-#error "This board has STM32F446 processor with a 25MHz crystal, select a corresponding build!"
+#error "This board has STM32F412 processor with a 25MHz crystal, select a corresponding build!"
 #endif
 
-#define BOARD_NAME "Longboard32"
-#define BOARD_URL "Sienci Longboard32"
+#define BOARD_NAME "SuperLongBoard"
+#define BOARD_URL "Sienci Super Longboard"
 
 #if SLB_EEPROM_ENABLE
 #undef I2C_ENABLE
@@ -200,15 +200,15 @@
 #define AUXINPUT3_PIN           15
 
 /*maco pins, aux for now*/
-//macro 1 (RUN)
-#define AUXINPUT4_PORT          GPIOC
-#define AUXINPUT4_PIN           11
+//macro 1 
+#define AUXINPUT4_PORT          GPIOE
+#define AUXINPUT4_PIN           0
 //macro 2
 #define AUXINPUT5_PORT          GPIOE
 #define AUXINPUT5_PIN           1
-//macro 3
-#define AUXINPUT6_PORT          GPIOE
-#define AUXINPUT6_PIN           0
+//macro 3 (RUN)
+#define AUXINPUT6_PORT          GPIOC
+#define AUXINPUT6_PIN           11
 
 //not currently supported in GRBLHAL
 //#define AUXINPUT7_PORT          GPIOD
