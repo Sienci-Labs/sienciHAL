@@ -55,3 +55,6 @@
 [submodule "probing"]
 	path = probing
 	url = https://github.com/Sienci-Labs/grblhal_probe_plugin.git
+[submodule "switchbank"]
+	path = switchbank
+	url = https://github.com/Sienci-Labs/grblhal-switchbank.git
