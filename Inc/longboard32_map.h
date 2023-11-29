@@ -158,6 +158,7 @@
 #define COOLANT_MIST_PIN        4
 #define COOLANT_OUTMODE         GPIO_BITBAND
 
+//*****Switchbank will always claim the first 4 aux outputs******
 #define AUXOUTPUT0_PORT         GPIOC
 #define AUXOUTPUT0_PIN          14
 #define AUXOUTPUT1_PORT         GPIOC
@@ -172,19 +173,15 @@
 #define AUXOUTPUT4_PIN          0
 #define MODBUS_DIR_AUX          4
 
-/* temporary defines for additional laser pins*/
-#define AUXOUTPUT5_PORT         GPIOC //laser EN pin
-#define AUXOUTPUT5_PIN          12    //laser EN pin
-
 /*defines for neopixel bitbang pins*/
 #if STATUS_LIGHT_ENABLE
-#define AUXOUTPUT6_PORT         GPIOC //rail LED strip
-#define AUXOUTPUT6_PIN          9    //rail LED strip
-#define AUXOUTPUT7_PORT         GPIOA //ring LED strip
+#define AUXOUTPUT5_PORT         GPIOC //rail LED strip
+#define AUXOUTPUT5_PIN          9    //rail LED strip
+#define AUXOUTPUT6_PORT         GPIOA //ring LED strip
 #define AUXOUTPUT7_PIN          13    //ring LED strip
 #endif
-#define RING_LED_AUXOUT         7
-#define RAIL_LED_AUXOUT         6
+#define RING_LED_AUXOUT         6
+#define RAIL_LED_AUXOUT         5
 
 #define AUXOUTPUT_OUTMODE       GPIO_BITBAND
 
