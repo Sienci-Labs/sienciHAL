@@ -178,7 +178,7 @@
 #define AUXOUTPUT5_PORT         GPIOC //rail LED strip
 #define AUXOUTPUT5_PIN          9    //rail LED strip
 #define AUXOUTPUT6_PORT         GPIOA //ring LED strip
-#define AUXOUTPUT7_PIN          13    //ring LED strip
+#define AUXOUTPUT6_PIN          13    //ring LED strip
 #endif
 #define RING_LED_AUXOUT         6
 #define RAIL_LED_AUXOUT         5
