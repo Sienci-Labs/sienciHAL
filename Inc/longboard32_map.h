@@ -27,7 +27,9 @@
 #error "This board has STM32F412 processor with a 25MHz crystal, select a corresponding build!"
 #endif
 
+#ifndef BOARD_NAME
 #define BOARD_NAME "SuperLongBoard"
+#endif
 #define BOARD_URL "Sienci Super Longboard"
 
 #if SLB_EEPROM_ENABLE
