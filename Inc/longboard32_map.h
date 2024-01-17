@@ -42,7 +42,7 @@
 #define HAS_IOPORTS
 
 #define HAS_BOARD_INIT
-#define WIZCHIP_SPI_PRESCALER SPI_BAUDRATEPRESCALER_2
+#define WIZCHIP_SPI_PRESCALER SPI_BAUDRATEPRESCALER_4
 
 #if MODBUS_ENABLE
 #define SERIAL2_MOD 2
@@ -228,8 +228,8 @@
 #define PROBE_PIN          4     
 
 #if I2C_STROBE_ENABLE
-#define I2C_STROBE_PORT         GPIOD
-#define I2C_STROBE_PIN          10
+#define I2C_STROBE_PORT         GPIOB
+#define I2C_STROBE_PIN          3
 #endif
 
 #define TMC_STEALTHCHOP 0
