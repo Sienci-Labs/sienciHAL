@@ -345,7 +345,7 @@ void spi_init (void)
 void spi_set_max_speed (void)
 {
 	spi_port.Instance->CR1 &= ~SPI_BAUDRATEPRESCALER_256;
-	spi_port.Instance->CR1 |= SPI_BAUDRATEPRESCALER_64; // should be able to go to 12Mhz...
+	spi_port.Instance->CR1 |= SPI_BAUDRATEPRESCALER_4; // should be able to go to 25Mhz...
 }
 
 uint32_t spi_set_speed (uint32_t prescaler)
