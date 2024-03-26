@@ -3,7 +3,7 @@
 
   Part of grblHAL
 
-  Copyright (c) 2022 Expatria Technologies
+  Copyright (c) 2024 Sienci Labs
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -161,14 +161,14 @@
 #define COOLANT_OUTMODE         GPIO_BITBAND
 
 //*****Switchbank will always claim the first 4 aux outputs******
-#define AUXOUTPUT0_PORT         GPIOC
-#define AUXOUTPUT0_PIN          14
-#define AUXOUTPUT1_PORT         GPIOC
-#define AUXOUTPUT1_PIN          0
-#define AUXOUTPUT2_PORT         GPIOC
-#define AUXOUTPUT2_PIN          1
 #define AUXOUTPUT3_PORT         GPIOC
-#define AUXOUTPUT3_PIN          8
+#define AUXOUTPUT3_PIN          14
+#define AUXOUTPUT2_PORT         GPIOC
+#define AUXOUTPUT2_PIN          0
+#define AUXOUTPUT1_PORT         GPIOC
+#define AUXOUTPUT1_PIN          1
+#define AUXOUTPUT0_PORT         GPIOC
+#define AUXOUTPUT0_PIN          8
 
 /*modbus direction pin*/
 #define AUXOUTPUT4_PORT         GPIOB
