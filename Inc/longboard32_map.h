@@ -254,6 +254,9 @@
 #define MOTOR_SGY2_PORT             GPIOA
 #define MOTOR_SGY2_PIN              3
 
+#define MOTOR_SGA_PORT              GPIOD
+#define MOTOR_SGA_PIN               2
+
 #if (N_ABC_MOTORS > 0) && (N_AXIS == 3)
 #define MOTOR_CSM3_PORT             GPIOE
 #define MOTOR_CSM3_PIN              12

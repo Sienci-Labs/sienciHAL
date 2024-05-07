@@ -44,6 +44,10 @@
 SPI_HandleTypeDef hspi2 = {0};
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
+TIM_MasterConfigTypeDef sMasterConfig = {0};
+TIM_IC_InitTypeDef sConfigIC = {0};
+TIM_HandleTypeDef htim2;
+
 #include "trinamic/common.h"
 
 static SPI_HandleTypeDef spi_port = {
@@ -250,6 +254,34 @@ static void if_init (uint8_t motors, axes_signals_t enabled)
     }
 }
 
+#if SLB_MOTOR_ALARM
+
+
+// for the motor that has triggered the IRQ.
+ISR_CODE static void ISR_FUNC(motor_alarm_a)()
+{
+//SGA   PD2  EXTI2
+
+}
+
+// When the input-compare IRQ is triggered, check the pins and enqueue the motor alarm code as well as a message
+ISR_CODE static void ISR_FUNC(motor_alarm_tim)()
+{
+//SGX   PA15 TIM2CH1
+//SGY1  PA1  TIM2CH2
+//SGY2  PA3  TIM2CH4  
+//SGZ   PA2  TIM2CH3
+
+
+}
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+    motor_alarm_tim();
+}
+
+#endif
+
 void board_init (void)
 {
     axes_signals_t i = {0};
@@ -314,6 +346,83 @@ void board_init (void)
     HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);            
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
+#endif
+
+//initialize I/O for motor alarms
+#if SLB_MOTOR_ALARM
+
+    __HAL_RCC_TIM2_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();    
+
+  /*Configure GPIO pins : PD10 PD2 PD7 */
+  GPIO_InitStruct.Pin = MOTOR_SGA_PIN;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(MOTOR_SGA_PORT, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+    GPIO_InitTypeDef GPIO_Init2 = {
+        .Speed = GPIO_SPEED_FREQ_LOW,
+        .Mode = GPIO_MODE_AF_PP,
+        .Pull = GPIO_NOPULL,
+        .Alternate = GPIO_AF1_TIM2
+    };  
+
+    GPIO_Init2.Pin = (1 << MOTOR_SGX_PIN);
+    HAL_GPIO_Init(MOTOR_SGX_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY1_PIN);
+    HAL_GPIO_Init(MOTOR_SGY1_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGZ_PIN);
+    HAL_GPIO_Init(MOTOR_SGZ_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY2_PIN);
+    HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);
+
+    /* TIM2 interrupt Init */
+    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);
+  /* USER CODE BEGIN TIM2_MspInit 1 */    
 #endif
 
 }
