@@ -263,9 +263,27 @@ static void warning_msg_a (uint_fast16_t state)
     system_set_exec_alarm(Alarm_MotorFault);
 }
 
-static void warning_msg (uint_fast16_t state)
+static void warning_msg_z (uint_fast16_t state)
 {
-    report_message("Motor Error on XYZ Axis!", Message_Warning);
+    report_message("Motor Error on Z Axis!", Message_Warning);
+    system_set_exec_alarm(Alarm_MotorFault);
+}
+
+static void warning_msg_y2 (uint_fast16_t state)
+{
+    report_message("Motor Error on Y2 Axis!", Message_Warning);
+    system_set_exec_alarm(Alarm_MotorFault);
+}
+
+static void warning_msg_y1 (uint_fast16_t state)
+{
+    report_message("Motor Error on Y1 Axis!", Message_Warning);
+    system_set_exec_alarm(Alarm_MotorFault);
+}
+
+static void warning_msg_x (uint_fast16_t state)
+{
+    report_message("Motor Error on X Axis!", Message_Warning);
     system_set_exec_alarm(Alarm_MotorFault);
 }
 
@@ -280,22 +298,26 @@ void EXTI2_IRQHandler(void)
 
 }
 
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-    
-  if(htim->Instance==TIM2) // Interrupt come from Timer2
-  {
-      __HAL_TIM_SET_COUNTER(&htim2,0);
-  }   
-  
-    protocol_enqueue_rt_command(warning_msg);
-}
-
 void TIM2_IRQHandler(void){
 
-    __HAL_TIM_CLEAR_IT(&htim2,0xFF);
+  /*           @arg TIM_IT_CC1:  Capture/Compare 1 interrupt
+  *            @arg TIM_IT_CC2:  Capture/Compare 2 interrupt
+  *            @arg TIM_IT_CC3:  Capture/Compare 3 interrupt
+  *            @arg TIM_IT_CC4:  Capture/Compare 4 interrupt
+  */
 
-    protocol_enqueue_rt_command(warning_msg);
+    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC3))
+        protocol_enqueue_rt_command(warning_msg_z);
+    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC4))
+        protocol_enqueue_rt_command(warning_msg_y2);
+    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC2))
+        protocol_enqueue_rt_command(warning_msg_y1);
+    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC1))
+        protocol_enqueue_rt_command(warning_msg_x);
+
+    __HAL_TIM_CLEAR_IT(&htim2,0xFF);                       
+    __HAL_TIM_SET_COUNTER(&htim2, 0);  // reset the counter
+      
 }
 
 #endif
@@ -366,14 +388,14 @@ void board_init (void)
     __HAL_RCC_GPIOA_CLK_ENABLE();
 #endif
 
-//initialize I/O for motor alarms
+//initialize I/O clocks for motor alarms
 #if SLB_MOTOR_ALARM
 
     __HAL_RCC_TIM2_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();    
 
-  /*Configure GPIO pins : PD2 */
+  /*Configure GPIO pin : PD2 */
   GPIO_InitStruct.Pin = (1 << MOTOR_SGA_PIN);
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -382,25 +404,18 @@ void board_init (void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI2_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
   
-  /* USER CODE BEGIN TIM2_Init 1 */
+  /* TIM2_Init 1 */
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 0xFFFFFFF1;
+  htim2.Init.Period = 0xFFFFFFFF;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
   {
     Error_Handler();
   }
-
-  //sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  //if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-  //{
-  //  Error_Handler();
-  //}
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
@@ -435,7 +450,6 @@ void board_init (void)
     GPIO_Init2.Pin = (1 << MOTOR_SGY2_PIN);
     HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);
 
-    //HAL_TIM_Base_Start_IT(&htim2);
     HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
     HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
     HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);
@@ -443,8 +457,7 @@ void board_init (void)
 
     /* TIM2 interrupt Init */
     HAL_NVIC_SetPriority(TIM2_IRQn, 2, 0);
-    HAL_NVIC_EnableIRQ(TIM2_IRQn);
-  /* USER CODE BEGIN TIM2_MspInit 1 */    
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);   
 #endif
 
 }
