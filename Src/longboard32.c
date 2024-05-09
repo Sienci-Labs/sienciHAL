@@ -45,6 +45,7 @@ SPI_HandleTypeDef hspi2 = {0};
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 TIM_MasterConfigTypeDef sMasterConfig = {0};
+TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 TIM_IC_InitTypeDef sConfigIC = {0};
 TIM_HandleTypeDef htim2;
 
@@ -256,28 +257,45 @@ static void if_init (uint8_t motors, axes_signals_t enabled)
 
 #if SLB_MOTOR_ALARM
 
-
-// for the motor that has triggered the IRQ.
-ISR_CODE static void ISR_FUNC(motor_alarm_a)()
+static void warning_msg_a (uint_fast16_t state)
 {
-//SGA   PD2  EXTI2
-
+    report_message("Motor Error on A Axis!", Message_Warning);
+    system_set_exec_alarm(Alarm_MotorFault);
 }
 
-// When the input-compare IRQ is triggered, check the pins and enqueue the motor alarm code as well as a message
-ISR_CODE static void ISR_FUNC(motor_alarm_tim)()
+static void warning_msg (uint_fast16_t state)
 {
-//SGX   PA15 TIM2CH1
-//SGY1  PA1  TIM2CH2
-//SGY2  PA3  TIM2CH4  
-//SGZ   PA2  TIM2CH3
+    report_message("Motor Error on XYZ Axis!", Message_Warning);
+    system_set_exec_alarm(Alarm_MotorFault);
+}
 
+
+void EXTI2_IRQHandler(void)
+{
+    uint32_t ifg = __HAL_GPIO_EXTI_GET_IT(1<<2);
+    if(ifg)
+        __HAL_GPIO_EXTI_CLEAR_IT(ifg);
+
+    protocol_enqueue_rt_command(warning_msg_a);
 
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-    motor_alarm_tim();
+    
+  if(htim->Instance==TIM2) // Interrupt come from Timer2
+  {
+      __HAL_TIM_SET_COUNTER(&htim2,0);
+  }   
+  
+    protocol_enqueue_rt_command(warning_msg);
+}
+
+void TIM2_IRQHandler(void){
+
+    __HAL_TIM_CLEAR_IT(&htim2,0xFF);
+
+    protocol_enqueue_rt_command(warning_msg);
 }
 
 #endif
@@ -355,54 +373,52 @@ void board_init (void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();    
 
-  /*Configure GPIO pins : PD10 PD2 PD7 */
-  GPIO_InitStruct.Pin = MOTOR_SGA_PIN;
+  /*Configure GPIO pins : PD2 */
+  GPIO_InitStruct.Pin = (1 << MOTOR_SGA_PIN);
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(MOTOR_SGA_PORT, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN TIM2_Init 1 */
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-  /* USER CODE END TIM2_Init 1 */
+  
+  /* USER CODE BEGIN TIM2_Init 1 */
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 4294967295;
+  htim2.Init.Period = 0xFFFFFFF1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
   {
     Error_Handler();
   }
+
+  //sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  //if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  //{
+  //  Error_Handler();
+  //}
+
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
+
   sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM2_Init 2 */
+  HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1);
+  HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2);
+  HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_3);
+  HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_4);
+  
 
-  /* USER CODE END TIM2_Init 2 */
     GPIO_InitTypeDef GPIO_Init2 = {
         .Speed = GPIO_SPEED_FREQ_LOW,
         .Mode = GPIO_MODE_AF_PP,
@@ -419,8 +435,14 @@ void board_init (void)
     GPIO_Init2.Pin = (1 << MOTOR_SGY2_PIN);
     HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);
 
+    //HAL_TIM_Base_Start_IT(&htim2);
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);
+
     /* TIM2 interrupt Init */
-    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TIM2_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
   /* USER CODE BEGIN TIM2_MspInit 1 */    
 #endif
