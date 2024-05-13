@@ -47,7 +47,56 @@ GPIO_InitTypeDef GPIO_InitStruct = {0};
 TIM_MasterConfigTypeDef sMasterConfig = {0};
 TIM_ClockConfigTypeDef sClockSourceConfig = {0};
 TIM_IC_InitTypeDef sConfigIC = {0};
+
+#if SLB_MOTOR_ALARM
+
 TIM_HandleTypeDef htim2;
+
+struct AlarmFunctionCall {
+    GPIO_TypeDef* port;
+    int pin;
+};
+
+struct AlarmFunctionCall alarmgpio[] = {
+    {MOTOR_SGX_PORT, MOTOR_SGX_PIN}, 
+    {MOTOR_SGY1_PORT, MOTOR_SGY1_PIN}, 
+    {MOTOR_SGZ_PORT, MOTOR_SGZ_PIN},  
+    {MOTOR_SGY2_PORT, MOTOR_SGY2_PIN},  
+    {MOTOR_SGA_PORT, MOTOR_SGA_PIN}  
+};
+
+typedef union {
+    uint8_t mask;
+    uint8_t value;
+    struct {
+        uint8_t x :1,
+                y :1,
+                z :1,
+                a :1,
+                b :1,
+                c :1,
+                u :1,
+                v :1;
+    };
+} motor_alarm_pin_t;
+
+static motor_alarm_pin_t motor_alarm_pins;
+static motor_alarm_pin_t motor_alarm_polarity;
+static motor_alarm_pin_t motor_alarm_enable;
+
+static on_execute_realtime_ptr on_execute_realtime, on_execute_delay;
+
+static uint32_t debounce_ms = 0;
+static uint32_t polling_ms = 0;
+#define DEBOUNCE_DELAY 25
+#define ALARM_THRESHOLD 5
+
+#define N_MOTOR_ALARMS 5
+
+static int8_t val[N_MOTOR_ALARMS] = {0};
+static bool motor_alarm_active = false;
+
+#endif
 
 #include "trinamic/common.h"
 
@@ -193,6 +242,8 @@ static void add_cs_pin (xbar_t *gpio, void *data)
     }
 }
 
+#if TRINAMIC_ENABLE
+
 static void if_init (uint8_t motors, axes_signals_t enabled)
 {
     static bool init_ok = false;
@@ -254,37 +305,90 @@ static void if_init (uint8_t motors, axes_signals_t enabled)
         hal.enumerate_pins(true, add_cs_pin, NULL);
     }
 }
+#endif
 
 #if SLB_MOTOR_ALARM
 
-static void warning_msg_a (uint_fast16_t state)
-{
-    report_message("Motor Error on A Axis!", Message_Warning);
-    system_set_exec_alarm(Alarm_MotorFault);
-}
+#if SLB_MOTOR_ALARM_IRQ
 
-static void warning_msg_z (uint_fast16_t state)
+static void warning_msg_motor (uint_fast16_t state)
 {
-    report_message("Motor Error on Z Axis!", Message_Warning);
-    system_set_exec_alarm(Alarm_MotorFault);
-}
+    GPIO_InitTypeDef GPIO_Init2 = {
+        .Speed = GPIO_SPEED_FREQ_HIGH,
+        .Mode = GPIO_MODE_INPUT,
+        .Pull = GPIO_NOPULL
+    };  
 
-static void warning_msg_y2 (uint_fast16_t state)
-{
-    report_message("Motor Error on Y2 Axis!", Message_Warning);
-    system_set_exec_alarm(Alarm_MotorFault);
-}
+    HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_2);
+    HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_3);
+    HAL_TIM_IC_Stop_IT(&htim2, TIM_CHANNEL_4);
 
-static void warning_msg_y1 (uint_fast16_t state)
-{
-    report_message("Motor Error on Y1 Axis!", Message_Warning);
-    system_set_exec_alarm(Alarm_MotorFault);
-}
+    //set all the pins to input
+    GPIO_Init2.Pin = (1 << MOTOR_SGX_PIN);
+    HAL_GPIO_Init(MOTOR_SGX_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY1_PIN);
+    HAL_GPIO_Init(MOTOR_SGY1_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGZ_PIN);
+    HAL_GPIO_Init(MOTOR_SGZ_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY2_PIN);
+    HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGA_PIN);
+    HAL_GPIO_Init(MOTOR_SGA_PORT, &GPIO_Init2);    
 
-static void warning_msg_x (uint_fast16_t state)
-{
-    report_message("Motor Error on X Axis!", Message_Warning);
-    system_set_exec_alarm(Alarm_MotorFault);
+    //this read functions as IRQ debounce, additional filtering could be added as needed.
+    if(!DIGITAL_IN(MOTOR_SGX_PORT, MOTOR_SGX_PIN)){
+        report_message("Motor Error on X Axis!", Message_Warning);   
+        system_set_exec_alarm(Alarm_MotorFault);
+    }
+
+    if(!DIGITAL_IN(MOTOR_SGY1_PORT, MOTOR_SGY1_PIN)){
+        report_message("Motor Error on Y1 Axis!", Message_Warning);   
+        system_set_exec_alarm(Alarm_MotorFault);
+    }
+    
+    if(!DIGITAL_IN(MOTOR_SGZ_PORT, MOTOR_SGZ_PIN)){
+        report_message("Motor Error on Z Axis!", Message_Warning);   
+        system_set_exec_alarm(Alarm_MotorFault);
+    }
+
+    if(!DIGITAL_IN(MOTOR_SGY2_PORT, MOTOR_SGY2_PIN)){
+        report_message("Motor Error on Y2 Axis!", Message_Warning);   
+        system_set_exec_alarm(Alarm_MotorFault);
+    }
+
+    if(!DIGITAL_IN(MOTOR_SGA_PORT, MOTOR_SGA_PIN)){
+        report_message("Motor Error on A Axis!", Message_Warning);   
+        system_set_exec_alarm(Alarm_MotorFault);
+    }              
+
+    motor_alarm_pins.value = 0; //clear the alarm mask
+    
+    //reset the timer pins
+    GPIO_Init2.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_Init2.Mode = GPIO_MODE_AF_PP;
+    GPIO_Init2.Pull = GPIO_NOPULL;
+    GPIO_Init2.Alternate = GPIO_AF1_TIM2;
+
+    GPIO_Init2.Pin = (1 << MOTOR_SGX_PIN);
+    HAL_GPIO_Init(MOTOR_SGX_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY1_PIN);
+    HAL_GPIO_Init(MOTOR_SGY1_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGZ_PIN);
+    HAL_GPIO_Init(MOTOR_SGZ_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY2_PIN);
+    HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);
+
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);    
+
+    //Configure GPIO pin : PD2   
+    GPIO_Init2.Mode = GPIO_MODE_IT_RISING_FALLING;
+    GPIO_Init2.Pull = GPIO_NOPULL;
+    GPIO_Init2.Pin = (1 << MOTOR_SGA_PIN);
+    HAL_GPIO_Init(MOTOR_SGA_PORT, &GPIO_Init2);
 }
 
 
@@ -294,7 +398,8 @@ void EXTI2_IRQHandler(void)
     if(ifg)
         __HAL_GPIO_EXTI_CLEAR_IT(ifg);
 
-    protocol_enqueue_rt_command(warning_msg_a);
+    protocol_enqueue_rt_command(warning_msg_motor);
+    motor_alarm_pins.b = 1;
 
 }
 
@@ -304,21 +409,111 @@ void TIM2_IRQHandler(void){
   *            @arg TIM_IT_CC2:  Capture/Compare 2 interrupt
   *            @arg TIM_IT_CC3:  Capture/Compare 3 interrupt
   *            @arg TIM_IT_CC4:  Capture/Compare 4 interrupt
-  */
+  */  
 
-    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC3))
-        protocol_enqueue_rt_command(warning_msg_z);
-    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC4))
-        protocol_enqueue_rt_command(warning_msg_y2);
-    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC2))
-        protocol_enqueue_rt_command(warning_msg_y1);
-    if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC1))
-        protocol_enqueue_rt_command(warning_msg_x);
+    if   (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC3)) {
+        motor_alarm_pins.z = 1;
+    } if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC4)) {
+        motor_alarm_pins.a = 1;
+    } if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC2)) {
+        motor_alarm_pins.y = 1;
+    } if (__HAL_TIM_GET_FLAG(&htim2,TIM_IT_CC1)) {
+        motor_alarm_pins.x = 1;
+    }
 
+    protocol_enqueue_rt_command(warning_msg_motor);
     __HAL_TIM_CLEAR_IT(&htim2,0xFF);                       
     __HAL_TIM_SET_COUNTER(&htim2, 0);  // reset the counter
       
 }
+#endif
+
+#if SLB_MOTOR_ALARM_POLLED
+
+static void execute_alarm ()
+{   
+    
+    if(!motor_alarm_active){
+
+        if(motor_alarm_pins.x){
+            report_message("Motor Error on X Axis!", Message_Warning);   
+            system_set_exec_alarm(Alarm_MotorFault);
+        }
+
+        if(motor_alarm_pins.y){
+            report_message("Motor Error on Y1 Axis!", Message_Warning);   
+            system_set_exec_alarm(Alarm_MotorFault);
+        }
+        
+        if(motor_alarm_pins.z){
+            report_message("Motor Error on Z Axis!", Message_Warning);   
+            system_set_exec_alarm(Alarm_MotorFault);
+        }
+
+        if(motor_alarm_pins.a){
+            report_message("Motor Error on Y2 Axis!", Message_Warning);   
+            system_set_exec_alarm(Alarm_MotorFault);
+        }
+
+        if(motor_alarm_pins.b){
+            report_message("Motor Error on A Axis!", Message_Warning);   
+            system_set_exec_alarm(Alarm_MotorFault);
+        }
+
+        motor_alarm_active = true;
+    }         
+    
+}
+
+static void poll_alarms (void){
+    
+    uint32_t ms = hal.get_elapsed_ticks();
+    if(ms < polling_ms + DEBOUNCE_DELAY)
+        return;
+
+    int_fast8_t idx = N_MOTOR_ALARMS;
+    do {
+        idx--;
+        if(!DIGITAL_IN(alarmgpio[idx].port, alarmgpio[idx].pin)) //apply inversion and enable here
+            val[idx]++;
+        else
+            val[idx]--;
+
+        if(val[idx] > ALARM_THRESHOLD)
+            val[idx] = ALARM_THRESHOLD;
+
+        if(val[idx] < 0)
+            val[idx] = 0;                   
+        
+        if (val[idx] >= ALARM_THRESHOLD)
+            motor_alarm_pins.mask |= 1 << idx;
+        else if (val[idx] == 0)
+            motor_alarm_pins.mask &= ~(1 << idx);
+    } while(idx >= 0);
+
+    if(motor_alarm_pins.value > 0)
+        execute_alarm();
+    else
+        motor_alarm_active = false;
+
+    polling_ms = ms;    
+}
+
+static void alarm_poll_realtime (sys_state_t grbl_state)
+{
+    on_execute_realtime(grbl_state);
+
+    poll_alarms();
+}
+
+static void alarm_poll_delay (sys_state_t grbl_state)
+{
+    on_execute_delay(grbl_state);
+
+    poll_alarms();
+}
+
+#endif
 
 #endif
 
@@ -391,13 +586,17 @@ void board_init (void)
 //initialize I/O clocks for motor alarms
 #if SLB_MOTOR_ALARM
 
+#if SLB_MOTOR_ALARM_IRQ
+    motor_alarm_pins.value = 0;
+    motor_alarm_polarity.value = 0;
+
     __HAL_RCC_TIM2_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();    
 
   /*Configure GPIO pin : PD2 */
   GPIO_InitStruct.Pin = (1 << MOTOR_SGA_PIN);
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(MOTOR_SGA_PORT, &GPIO_InitStruct);
 
@@ -424,7 +623,7 @@ void board_init (void)
     Error_Handler();
   }
 
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_BOTHEDGE;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
@@ -457,7 +656,40 @@ void board_init (void)
 
     /* TIM2 interrupt Init */
     HAL_NVIC_SetPriority(TIM2_IRQn, 2, 0);
-    HAL_NVIC_EnableIRQ(TIM2_IRQn);   
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);
+
+#endif
+#if SLB_MOTOR_ALARM_POLLED
+
+    GPIO_InitTypeDef GPIO_Init2 = {
+        .Speed = GPIO_SPEED_FREQ_HIGH,
+        .Mode = GPIO_MODE_INPUT,
+        .Pull = GPIO_NOPULL
+    };  
+
+    //set all the pins to input, no IRQs here.
+    GPIO_Init2.Pin = (1 << MOTOR_SGX_PIN);
+    HAL_GPIO_Init(MOTOR_SGX_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY1_PIN);
+    HAL_GPIO_Init(MOTOR_SGY1_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGZ_PIN);
+    HAL_GPIO_Init(MOTOR_SGZ_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGY2_PIN);
+    HAL_GPIO_Init(MOTOR_SGY2_PORT, &GPIO_Init2);
+    GPIO_Init2.Pin = (1 << MOTOR_SGA_PIN);
+    HAL_GPIO_Init(MOTOR_SGA_PORT, &GPIO_Init2);             
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+
+    //add polling of button state to realtime and delay chains
+    on_execute_realtime = grbl.on_execute_realtime;
+    grbl.on_execute_realtime = alarm_poll_realtime;
+
+    on_execute_delay = grbl.on_execute_delay;
+    grbl.on_execute_delay = alarm_poll_delay;           
+
+#endif
 #endif
 
 }
