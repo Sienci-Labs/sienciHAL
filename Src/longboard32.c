@@ -38,6 +38,7 @@
 #include "i2c.h"
 #include "grbl/protocol.h"
 #include "grbl/settings.h"
+#include "grbl/nvs_buffer.h"
 
 #include "trinamic/tmc2660.h"
 
@@ -65,36 +66,79 @@ struct AlarmFunctionCall alarmgpio[] = {
     {MOTOR_SGA_PORT, MOTOR_SGA_PIN}  
 };
 
-typedef union {
-    uint8_t mask;
-    uint8_t value;
-    struct {
-        uint8_t x :1,
-                y :1,
-                z :1,
-                a :1,
-                b :1,
-                c :1,
-                u :1,
-                v :1;
-    };
-} motor_alarm_pin_t;
-
-static motor_alarm_pin_t motor_alarm_pins;
-static motor_alarm_pin_t motor_alarm_polarity;
-static motor_alarm_pin_t motor_alarm_enable;
-
 static on_execute_realtime_ptr on_execute_realtime, on_execute_delay;
+static on_reset_ptr on_reset;
 
 static uint32_t debounce_ms = 0;
 static uint32_t polling_ms = 0;
 #define DEBOUNCE_DELAY 25
-#define ALARM_THRESHOLD 5
+#define ALARM_THRESHOLD 3
 
 #define N_MOTOR_ALARMS 5
 
 static int8_t val[N_MOTOR_ALARMS] = {0};
 static bool motor_alarm_active = false;
+
+typedef struct {
+    axes_signals_t     enable;
+    axes_signals_t     invert;
+} motor_alarm_settings_t;
+
+static axes_signals_t motor_alarm_pins;
+
+static nvs_address_t nvs_address;
+motor_alarm_settings_t motor_alarms;
+
+static const setting_detail_t motor_alarm_settings[] = {
+    { 744, Group_Stepper, "Motor Alarm enable", NULL, Format_AxisMask, NULL, NULL, NULL, Setting_IsExpanded, &motor_alarms.enable.mask, NULL, NULL},
+    { 745, Group_Stepper, "Motor Alarm invert", NULL, Format_AxisMask, NULL, NULL, NULL, Setting_IsExpanded, &motor_alarms.invert.mask, NULL, NULL},
+};
+
+#ifndef NO_SETTINGS_DESCRIPTIONS
+
+static const setting_descr_t motor_alarm_descriptions[] = {
+    { 744, "Enables the motor alarm" },
+    { 745, "Inverts motor alarm signal" },
+};
+
+#endif
+
+// Hal settings API
+// Restore default settings and write to non volatile storage (NVS).
+static void motor_alarm_settings_restore (void)
+{
+    memset(&motor_alarms, 0, sizeof(motor_alarm_settings_t));
+    motor_alarms.enable.value = 7;
+    motor_alarms.invert.value = 0;
+
+    hal.nvs.memcpy_to_nvs(nvs_address, (uint8_t *)&motor_alarms, sizeof(motor_alarm_settings_t), true);
+}
+
+// Write settings to non volatile storage (NVS).
+static void motor_alarm_settings_save (void)
+{
+    hal.nvs.memcpy_to_nvs(nvs_address, (uint8_t *)&motor_alarm_settings, sizeof(motor_alarm_settings_t), true);
+}
+
+// Load settings from volatile storage (NVS)
+static void motor_alarm_settings_load (void)
+{
+    if(hal.nvs.memcpy_from_nvs((uint8_t *)&motor_alarm_settings, nvs_address, sizeof(motor_alarm_settings_t), true) != NVS_TransferResult_OK)
+        motor_alarm_settings_restore();
+
+}
+
+static setting_details_t setting_details = {
+    .settings = motor_alarm_settings,
+    .n_settings = sizeof(motor_alarm_settings) / sizeof(setting_detail_t),
+#ifndef NO_SETTINGS_DESCRIPTIONS
+    .descriptions = motor_alarm_descriptions,
+    .n_descriptions = sizeof(motor_alarm_descriptions) / sizeof(setting_descr_t),
+#endif
+    .save = motor_alarm_settings_save,
+    .load = motor_alarm_settings_load,
+    .restore = motor_alarm_settings_restore
+};
 
 #endif
 
@@ -430,36 +474,42 @@ void TIM2_IRQHandler(void){
 
 #if SLB_MOTOR_ALARM_POLLED
 
-static void execute_alarm ()
+static void alarm_reset (void)
+{
+    if(on_reset)
+        on_reset();
+
+    motor_alarm_active = false;
+}
+
+static void execute_alarm (sys_state_t state)
 {   
     
     if(!motor_alarm_active){
 
         if(motor_alarm_pins.x){
             report_message("Motor Error on X Axis!", Message_Warning);   
-            system_set_exec_alarm(Alarm_MotorFault);
         }
 
         if(motor_alarm_pins.y){
             report_message("Motor Error on Y1 Axis!", Message_Warning);   
-            system_set_exec_alarm(Alarm_MotorFault);
         }
         
         if(motor_alarm_pins.z){
             report_message("Motor Error on Z Axis!", Message_Warning);   
-            system_set_exec_alarm(Alarm_MotorFault);
         }
 
         if(motor_alarm_pins.a){
             report_message("Motor Error on Y2 Axis!", Message_Warning);   
-            system_set_exec_alarm(Alarm_MotorFault);
         }
 
         if(motor_alarm_pins.b){
             report_message("Motor Error on A Axis!", Message_Warning);   
-            system_set_exec_alarm(Alarm_MotorFault);
         }
 
+        if(motor_alarm_pins.value > 0){
+            system_set_exec_alarm(Alarm_EStop);
+        }
         motor_alarm_active = true;
     }         
     
@@ -467,14 +517,48 @@ static void execute_alarm ()
 
 static void poll_alarms (void){
     
+    bool enable = 0;
+    bool invert = 0;
+    bool gpio = 0;
+
     uint32_t ms = hal.get_elapsed_ticks();
-    if(ms < polling_ms + DEBOUNCE_DELAY)
+    if((ms < polling_ms + DEBOUNCE_DELAY) || (motor_alarms.enable.value == 0))
         return;
 
     int_fast8_t idx = N_MOTOR_ALARMS;
     do {
         idx--;
-        if(!DIGITAL_IN(alarmgpio[idx].port, alarmgpio[idx].pin)) //apply inversion and enable here
+
+        switch (idx) {
+            case 0:
+            enable = motor_alarms.enable.x;
+            invert = motor_alarms.invert.x;
+            break;
+            case 1:
+            enable = motor_alarms.enable.y;
+            invert = motor_alarms.invert.y;
+            break;
+            case 2:
+            enable = motor_alarms.enable.z;
+            invert = motor_alarms.invert.z;
+            break;
+            case 3:
+            enable = motor_alarms.enable.y;
+            invert = motor_alarms.invert.y;
+            break;
+            case 4:
+            enable = motor_alarms.enable.a;
+            invert = motor_alarms.invert.a;
+            break;                                                
+        }
+        
+        gpio = !DIGITAL_IN(alarmgpio[idx].port, alarmgpio[idx].pin);
+
+        if(invert)
+            gpio = !gpio;
+        
+        //if(!DIGITAL_IN(alarmgpio[idx].port, alarmgpio[idx].pin)) //apply enable here
+        if(gpio && enable) //apply enable here
             val[idx]++;
         else
             val[idx]--;
@@ -492,7 +576,7 @@ static void poll_alarms (void){
     } while(idx >= 0);
 
     if(motor_alarm_pins.value > 0)
-        execute_alarm();
+        protocol_enqueue_rt_command(execute_alarm);
     else
         motor_alarm_active = false;
 
@@ -683,11 +767,18 @@ void board_init (void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
     //add polling of button state to realtime and delay chains
+    on_reset = grbl.on_reset;
+    grbl.on_reset = alarm_reset;
+
     on_execute_realtime = grbl.on_execute_realtime;
     grbl.on_execute_realtime = alarm_poll_realtime;
 
     on_execute_delay = grbl.on_execute_delay;
-    grbl.on_execute_delay = alarm_poll_delay;           
+    grbl.on_execute_delay = alarm_poll_delay; 
+
+    if((nvs_address = nvs_alloc(sizeof(motor_alarm_settings_t)))) {
+        settings_register(&setting_details);
+    }      
 
 #endif
 #endif
