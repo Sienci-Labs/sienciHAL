@@ -108,8 +108,8 @@ static const setting_descr_t motor_alarm_descriptions[] = {
 static void motor_alarm_settings_restore (void)
 {
     memset(&motor_alarms, 0, sizeof(motor_alarm_settings_t));
-    motor_alarms.enable.value = 7;
-    motor_alarms.invert.value = 0;
+    motor_alarms.enable.mask = 15;
+    motor_alarms.invert.mask = 0;
 
     hal.nvs.memcpy_to_nvs(nvs_address, (uint8_t *)&motor_alarms, sizeof(motor_alarm_settings_t), true);
 }
