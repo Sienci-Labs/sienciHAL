@@ -34,6 +34,8 @@
 
 #ifdef SLB_ORANGE_BOARD
   #undef SLB_EEPROM_ENABLE
+  #undef I2C_ENABLE
+  #undef EEPROM_ENABLE  
   #undef SD_CARD_ENABLE
   #undef SIENCI_LASER_PWM
   #undef SDCARD_ENABLE
@@ -44,6 +46,7 @@
   #undef FTP_ENABLE
   #undef WEBSOCKET_ENABLE
   #undef NETWORK_IPMODE
+  #undef MODBUS_ENABLE
 #endif
 
 #if SLB_EEPROM_ENABLE
