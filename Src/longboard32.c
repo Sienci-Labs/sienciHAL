@@ -86,7 +86,7 @@ typedef struct {
 
 static axes_signals_t motor_alarm_pins;
 
-static nvs_address_t nvs_address;
+static nvs_address_t alm_nvs_address;
 motor_alarm_settings_t motor_alarms;
 
 static const setting_detail_t motor_alarm_settings[] = {
@@ -111,19 +111,19 @@ static void motor_alarm_settings_restore (void)
     motor_alarms.enable.mask = 15;
     motor_alarms.invert.mask = 0;
 
-    hal.nvs.memcpy_to_nvs(nvs_address, (uint8_t *)&motor_alarms, sizeof(motor_alarm_settings_t), true);
+    hal.nvs.memcpy_to_nvs(alm_nvs_address, (uint8_t *)&motor_alarms, sizeof(motor_alarm_settings_t), true);
 }
 
 // Write settings to non volatile storage (NVS).
 static void motor_alarm_settings_save (void)
 {
-    hal.nvs.memcpy_to_nvs(nvs_address, (uint8_t *)&motor_alarm_settings, sizeof(motor_alarm_settings_t), true);
+    hal.nvs.memcpy_to_nvs(alm_nvs_address, (uint8_t *)&motor_alarms, sizeof(motor_alarm_settings_t), true);
 }
 
 // Load settings from volatile storage (NVS)
 static void motor_alarm_settings_load (void)
 {
-    if(hal.nvs.memcpy_from_nvs((uint8_t *)&motor_alarm_settings, nvs_address, sizeof(motor_alarm_settings_t), true) != NVS_TransferResult_OK)
+    if(hal.nvs.memcpy_from_nvs((uint8_t *)&motor_alarms, alm_nvs_address, sizeof(motor_alarm_settings_t), true) != NVS_TransferResult_OK)
         motor_alarm_settings_restore();
 
 }
@@ -776,7 +776,7 @@ void board_init (void)
     on_execute_delay = grbl.on_execute_delay;
     grbl.on_execute_delay = alarm_poll_delay; 
 
-    if((nvs_address = nvs_alloc(sizeof(motor_alarm_settings_t)))) {
+    if((alm_nvs_address = nvs_alloc(sizeof(motor_alarm_settings_t)))) {
         settings_register(&setting_details);
     }      
 
