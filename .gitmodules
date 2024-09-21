@@ -45,10 +45,10 @@
 	url = https://github.com/grblHAL/Plugin_fans/
 [submodule "boot_entry"]
 	path = boot_entry
-	url = github.com:Sienci-Labs/GRBLHAL_bootloader_plugin.git
+	url = https://github.com/Sienci-Labs/GRBLHAL_bootloader_plugin
 [submodule "macros"]
 	path = macros
-	url = git@github.com:Sienci-Labs/grblhal-aux-macros.git
+	url = https://github.com/Sienci-Labs/grblhal-aux-macros
 [submodule "rgb"]
 	path = rgb
 	url = https://github.com/Sienci-Labs/grblhal-rgb-plugin.git
