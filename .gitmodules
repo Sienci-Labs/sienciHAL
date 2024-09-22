@@ -36,7 +36,7 @@
 	url = https://github.com/grblHAL/lwip
 [submodule "networking"]
 	path = networking
-	url = https://github.com/grblHAL/Plugin_networking
+	url = https://github.com/Sienci-Labs/Plugin_networking
 [submodule "encoder"]
 	path = encoder
 	url = https://github.com/grblHAL/Plugin_encoder
