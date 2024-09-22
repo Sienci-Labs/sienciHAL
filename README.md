@@ -6,6 +6,24 @@ A grblHAL driver for the STM32F401xC, STM32F407xx, STM32F411xE and STM32F446xx A
 
 Loosely based on code from robomechs [6-AXIS-USBCNC-GRBL](https://github.com/robomechs/6-AXIS-USBCNC-GRBL) port, updated for [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.htm) and the latest STM HAL drivers where appropriate.
 
+# Building SLB grblHAL with VS Code
+
+1. **Install VS Code**
+1. **Clone this repo to a local version and open the folder in VS Code** (bottom left blue button ➜ Open Remote Repository... ➜ Login to GitHub and select repo ➜ Set up as mirrored local repo in the Documents ➜ GitHub folder)
+1. **Make sure the repo is [set up recursively to reference submodules](https://graphite.dev/guides/git-clone-recursively)** by going to View ➜ Terminal, then sending `git submodule init` then `git submodule update` (or pass --recursive to the git clone command)
+1. **Set up PlatformIO by adding it as an extension**, this should also set up SienciHAL as a project and ST STM32 as a platform
+1. Download [genericSTM32F412VG.json](https://github.com/Sienci-Labs/sienciHAL/blob/SLB_Bringup_Dev/genericSTM32F412VG.json) and add the file to C:\Users\USER\.platformio\platforms\ststm32\boards
+1. Press the build checkmark up at the top, right of VS Code. Successful builds can be found in Documents\GitHub\sienciHAL\.pio\build
+1. If the build isn't successful, ensure all submodules are up-to-date by sending in the terminal:
+   ```
+   git submodule sync --recursive
+   git submodule update --init --recursive --force
+   git submodule foreach --recursive
+   ```
+1. If you have any other issues, ensure sub-module references are set correctly in .gitmodules 
+
+A submodule is a link to another repository at a particular snapshot. It allows you to keep a repository as a subdirectory of another repository, which helps in managing projects with multiple dependencies. This allows these sub-repositories to maintain their own histories and stay independent of the parent codebase.
+
 # Quickstart
 
 This project can be built with [PlatformIO](https://platformio.org).  For additional information on howto import the project, configure the driver and compile the firmware, see the Wiki-page [compiling grblHAL](https://github.com/grblHAL/core/wiki/Compiling-GrblHAL).
@@ -62,7 +80,6 @@ Be aware that the [Bootloader_and_Firmware](https://github.com/GadgetAngel/BTT_S
 2021-08-10: Added support for [BTT SKR 2](https://www.bigtree-tech.com/products/bigtreetech-skr-2.html), this is based on a STM32F407 processor with a 8MHz crystal.
 
 2021-05-28: Added support for [BTT SKR PRO](https://www.bigtree-tech.com/products/bigtreetech-skr-pro-v1-2.html), this is based on a STM32F407 processor with a 25MHz crystal.
-
 
 # Building grblHAL with Eclipse
 
