@@ -24,6 +24,13 @@ Loosely based on code from robomechs [6-AXIS-USBCNC-GRBL](https://github.com/rob
 
 A submodule is a link to another repository at a particular snapshot. It allows you to keep a repository as a subdirectory of another repository, which helps in managing projects with multiple dependencies. This allows these sub-repositories to maintain their own histories and stay independent of the parent codebase.
 
+## Bring an old build back to life for internal testing
+
+1. Look through git commit history until you find the build, then copy the hash
+2. Use git, or GitHub desktop, or any other terminal git app to follow these instructions <https://www.geeksforgeeks.org/how-to-create-branch-from-a-previous-commit-using-git/>
+3. Build using VS Code and PlatformIO or whatever process you'd typically use
+4. For sanity check, use a hex compare software to check new build against old to ensure you've revived it correctly (like [Beyond Compare](https://www.scootersoftware.com/download))
+
 # Quickstart
 
 This project can be built with [PlatformIO](https://platformio.org).  For additional information on howto import the project, configure the driver and compile the firmware, see the Wiki-page [compiling grblHAL](https://github.com/grblHAL/core/wiki/Compiling-GrblHAL).
