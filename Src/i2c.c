@@ -3,20 +3,20 @@
 
   Part of grblHAL driver for STM32F4xx
 
-  Copyright (c) 2018-2023 Terje Io
+  Copyright (c) 2018-2024 Terje Io
 
-  Grbl is free software: you can redistribute it and/or modify
+  grblHAL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
-  Grbl is distributed in the hope that it will be useful,
+  grblHAL is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+  along with grblHAL. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <main.h>
@@ -146,6 +146,21 @@ static keycode_callback_ptr keypad_callback = NULL;
 
 void i2c_init (void)
 {
+    static bool init_ok = false;
+
+    if(init_ok)
+        return;
+
+    init_ok = true;
+
+    GPIO_InitTypeDef GPIO_InitStruct = {
+        .Pin = (1 << I2C_SCL_PIN)|(1 << I2C_SDA_PIN),
+        .Mode = GPIO_MODE_AF_OD,
+        .Pull = GPIO_PULLUP,
+        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+        .Alternate = I2C_GPIO_AF
+    };
+    HAL_GPIO_Init(I2C_GPIO, &GPIO_InitStruct);
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -199,7 +214,7 @@ void i2c_init (void)
 
 bool i2c_probe (uint_fast16_t i2cAddr)
 {
-    //wait for bus to be ready
+    // wait for bus to be ready
     while (I2C_GetState(&i2c_port) != I2C_STATE_READY) {
         if(!hal.stream_blocking_callback())
             return false;
@@ -221,6 +236,26 @@ bool i2c_send (uint_fast16_t i2cAddr, uint8_t *buf, size_t size, bool block)
     }
 
     bool ok = I2C_Master_Transmit_IT(&i2c_port, i2cAddr << 1, buf, size) == HAL_OK;
+
+    if (ok && block) {
+        while (I2C_GetState(&i2c_port) != I2C_STATE_READY) {
+            if(!hal.stream_blocking_callback())
+                return false;
+        }
+    }
+
+    return ok;
+}
+
+bool i2c_receive (uint_fast16_t i2cAddr, uint8_t *buf, size_t size, bool block)
+{
+    //wait for bus to be ready
+    while (I2C_GetState(&i2c_port) != I2C_STATE_READY) {
+        if(!hal.stream_blocking_callback())
+            return false;
+    }
+
+    bool ok = I2C_Master_Receive_IT(&i2c_port, i2cAddr << 1, buf, size) == HAL_OK;
 
     if (ok && block) {
         while (I2C_GetState(&i2c_port) != I2C_STATE_READY) {

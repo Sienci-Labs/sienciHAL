@@ -3,18 +3,18 @@
 
   Part of grblHAL
 
-  Grbl is free software: you can redistribute it and/or modify
+  GrblHAL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
-  Grbl is distributed in the hope that it will be useful,
+  GrblHAL is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+  along with GrblHAL. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #if N_ABC_MOTORS > 3
@@ -31,9 +31,12 @@
 #undef I2C_ENABLE
 #undef EEPROM_ENABLE
 
-#define I2C_ENABLE 1
-#define I2C_PORT 1 // PB8 / PB9
-#define EEPROM_ENABLE 16 // 2K single byte addressing
+#define SERIAL_PORT     1   // GPIOA: TX = 9, RX = 10
+#define I2C_ENABLE      1
+#define I2C_PORT        1   // GPIOB: SCL = 8, SDA = 9
+#ifndef WEB_BUILD
+#define EEPROM_ENABLE   16  // 2K single byte addressing
+#endif
 
 #if TRINAMIC_ENABLE
 #define HAS_BOARD_INIT
@@ -116,15 +119,26 @@
 #define M5_ENABLE_PIN               3
 #endif
 
-  // Define spindle enable and spindle direction output pins.
-#define SPINDLE_ENABLE_PORT         GPIOB
-#define SPINDLE_ENABLE_PIN          1                           // FAN1
-#define SPINDLE_DIRECTION_PORT      GPIOB
-#define SPINDLE_DIRECTION_PIN       2                           // FAN2
+#define AUXOUTPUT0_PORT             GPIOB // Spindle PWM, FAN0
+#define AUXOUTPUT0_PIN              0
+#define AUXOUTPUT1_PORT             GPIOB // Spindle direction, FAN2
+#define AUXOUTPUT1_PIN              2
+#define AUXOUTPUT2_PORT             GPIOB // Spindle enable, FAN1
+#define AUXOUTPUT2_PIN              1
 
-// Define spindle PWM output pin.
-#define SPINDLE_PWM_PORT_BASE       GPIOB_BASE
-#define SPINDLE_PWM_PIN             0                           // FAN0
+// Define driver spindle pins
+#if DRIVER_SPINDLE_ENABLE
+#define SPINDLE_ENABLE_PORT         AUXOUTPUT2_PORT
+#define SPINDLE_ENABLE_PIN          AUXOUTPUT2_PIN
+#if DRIVER_SPINDLE_PWM_ENABLE
+#define SPINDLE_PWM_PORT            AUXOUTPUT0_PORT
+#define SPINDLE_PWM_PIN             AUXOUTPUT0_PIN
+#endif
+#if DRIVER_SPINDLE_DIR_ENABLE
+#define SPINDLE_DIRECTION_PORT      AUXOUTPUT1_PORT
+#define SPINDLE_DIRECTION_PIN       AUXOUTPUT1_PIN
+#endif
+#endif //DRIVER_SPINDLE_ENABLE
 
 // Define flood and mist coolant enable output pins.
 #define COOLANT_FLOOD_PORT          GPIOB
@@ -139,16 +153,22 @@
 #define FEED_HOLD_PIN               2                           // Y+ Limit
 #define CYCLE_START_PORT            GPIOA
 #define CYCLE_START_PIN             3                           // Z+ Limit
-
-#if SAFETY_DOOR_ENABLE
-//#define SAFETY_DOOR_PORT            GPIOG
-//#define SAFETY_DOOR_PIN             6                           // EXP1 PG4
-#endif
 #define CONTROL_INMODE GPIO_BITBAND
 
-// Define probe switch input pin.
-#define PROBE_PORT                  GPIOA
-#define PROBE_PIN                   1                           // BLTouch PA1
+#define AUXINPUT0_PORT              GPIOA                       // BLTouch PA1
+#define AUXINPUT0_PIN               1
+
+#if PROBE_ENABLE
+#define PROBE_PORT                  AUXINPUT0_PORT
+#define PROBE_PIN                   AUXINPUT0_PIN
+#endif
+
+#define LED_R_PORT                  GPIOB
+#define LED_R_PIN                   6
+#define LED_G_PORT                  GPIOB
+#define LED_G_PIN                   5
+#define LED_B_PORT                  GPIOB
+#define LED_B_PIN                   7
 
 #if SDCARD_ENABLE
 #define SD_CS_PORT                  GPIOA

@@ -43,6 +43,15 @@
 [submodule "fans"]
 	path = fans
 	url = https://github.com/grblHAL/Plugin_fans/
+[submodule "plasma"]
+	path = plasma
+	url = https://github.com/grblHAL/Plugin_plasma/
+[submodule "webui"]
+	path = webui
+	url = https://github.com/grblHAL/Plugin_WebUI/
+[submodule "plugins"]
+	path = plugins
+	url = https://github.com/grblHAL/Plugins_misc/
 [submodule "boot_entry"]
 	path = boot_entry
 	url = https://github.com/Sienci-Labs/GRBLHAL_bootloader_plugin

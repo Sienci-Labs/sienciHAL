@@ -9,6 +9,7 @@ src_dir = Src
 [common]
 build_flags =
   -I .
+  -I boards
   -I FatFs
   -I FatFs/STM
   -I Drivers/FATFS/Target
@@ -20,7 +21,10 @@ build_flags =
   -D _USE_IOCTL=1
   -D _USE_WRITE=1
   -D _VOLUMES=1
+  -Wl,-u,_printf_float
+  -Wl,-u,_scanf_float
 lib_deps =
+  boards
   bluetooth
   grbl
   keypad
@@ -32,6 +36,7 @@ lib_deps =
   FatFs
   sdcard
   spindle
+  embroidery
   Drivers/FATFS/App
   Drivers/FATFS/Target
   # USB serial support
@@ -41,14 +46,13 @@ lib_deps =
   USB_DEVICE/Target
 lib_extra_dirs =
   .
+  boards
   FatFs
   Middlewares/ST/STM32_USB_Device_Library
   USB_DEVICE
 
-[eth_networking]
+[wiznet_networking]
 build_flags =
-  # Floating point support for printf, required for WebUI v3
-  -Wl,-u,_printf_float
   -I lwip/src/include
   -I networking/wiznet
 lib_deps =

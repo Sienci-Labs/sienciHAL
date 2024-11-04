@@ -1,49 +1,48 @@
 /*
-  btt_skr_2.0_map.h - driver code for STM32F407 ARM processors
+  btt_skr_2.0_dac_map.h - driver code for STM32F407 ARM processors
 
   Part of grblHAL
 
   Copyright (c) 2021 fitch22
 
-  Grbl is free software: you can redistribute it and/or modify
+  GrblHAL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
-  Grbl is distributed in the hope that it will be useful,
+  GrblHAL is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+  along with GrblHAL. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #if N_ABC_MOTORS > 2
 #error "BTT SKR-2 supports 5 motors max."
 #endif
 
-#if !(defined(STM32F407xx) || defined(STM32F429xx)) || HSE_VALUE != 8000000
-#error "This board has a STM32F407 or STM32F429 processor with a 8MHz crystal, select a corresponding build!"
+#if TRINAMIC_ENABLE && N_GANGED > 0
+#error "BTT SKR-2 does not support ganged motors with Trinamic drivers."
 #endif
 
-#define BOARD_NAME "BTT SKR-2"
-#define BOARD_URL "https://github.com/bigtreetech/SKR-2"
+#if !defined(STM32F407xx) || HSE_VALUE != 8000000
+#error "This board has STM32F407 processor with a 8MHz crystal, select a corresponding build!"
+#endif
+
+#define BOARD_NAME "BTT SKR-2 (DAC)"
 #define HAS_BOARD_INIT
 
-#define I2C_PORT    1       // GPIOB, SCL_PIN = 8, SDA_PIN = 9
-//#define I2C1_ALT_PINMAP // GPIOB, SCL_PIN = 6, SDA_PIN = 7
-#if ETHERNET_ENABLE
-#define SPI_PORT    2       // GPIOB, SCK_PIN = 13, MISO_PIN = 14, MOSI_PIN = 15
-#endif
-
-#if TRINAMIC_SPI_ENABLE && ETHERNET_ENABLE
-#error "Trinamic SPI driver plugin and networking plugins cannot be enabled together!"
-#endif
+#define SERIAL_PORT     1   // GPIOA: TX = 9, RX = 10
+#define SERIAL1_PORT   32   // GPIOD: TX = 8, RX = 9
+#define I2C_PORT        1   // GPIOB: SCL = 8, SDA = 9
 
 // If we want to debug, we need to use USART1
-#if defined(DEBUG) && defined(USB_SERIAL_CDC)
-//#undef USB_SERIAL_CDC
+#if defined(DEBUG)
+#undef USB_SERIAL_CDC
+#define SERIAL_STREAM 0
+#define USB_SERIAL_CDC 0
 #endif
 
 // Define step pulse output pins.
@@ -113,18 +112,26 @@
 #define M4_ENABLE_PIN               13
 #endif
 
-  // Define spindle enable and spindle direction output pins.
-#define SPINDLE_ENABLE_PORT         GPIOB
-#define SPINDLE_ENABLE_PIN          6                           // FAN1
-#define SPINDLE_DIRECTION_PORT      GPIOB
-#define SPINDLE_DIRECTION_PIN       5                           // FAN2
+#define AUXOUTPUT0_PORT             GPIOB // Spindle PWM, EXP1 pin 2
+#define AUXOUTPUT0_PIN              0
+#define AUXOUTPUT1_PORT             GPIOB // Spindle direction, FAN2
+#define AUXOUTPUT1_PIN              5
+#define AUXOUTPUT2_PORT             GPIOB // Spindle enable, FAN1
+#define AUXOUTPUT2_PIN              6
 
-// Define spindle PWM output pin.
-#define SPINDLE_PWM_PORT_BASE       GPIOB_BASE
-#define SPINDLE_PWM_PIN             0                           // EXP1 - PB0, pin 9
-// Alt. spindle output, comment out definitions above and uncomment these to change:
-//#define SPINDLE_PWM_PORT_BASE       GPIOE_BASE
-//#define SPINDLE_PWM_PIN             5                         // SERVOS - PE5, pin 1
+// Define driver spindle pins
+#if DRIVER_SPINDLE_ENABLE
+#define SPINDLE_ENABLE_PORT         AUXOUTPUT2_PORT
+#define SPINDLE_ENABLE_PIN          AUXOUTPUT2_PIN
+#if DRIVER_SPINDLE_PWM_ENABLE
+#define SPINDLE_PWM_PORT            AUXOUTPUT0_PORT
+#define SPINDLE_PWM_PIN             AUXOUTPUT0_PIN
+#endif
+#if DRIVER_SPINDLE_DIR_ENABLE
+#define SPINDLE_DIRECTION_PORT      AUXOUTPUT1_PORT
+#define SPINDLE_DIRECTION_PIN       AUXOUTPUT1_PIN
+#endif
+#endif //DRIVER_SPINDLE_ENABLE
 
 // Define flood and mist coolant enable output pins.
 #define COOLANT_FLOOD_PORT          GPIOB
@@ -134,63 +141,37 @@
 
 // Define user-control controls (cycle start, reset, feed hold) input pins.
 // These are all available on EXP2 along with electrical RESET* (EXP2-8)
-#define CONTROL_PORT                GPIOA
-#define RESET_PIN                   4                           // Exp2-4
-#define FEED_HOLD_PIN               5                           // Exp2-2
-#define CYCLE_START_PIN             6                           // Exp2-1
-
-#if SAFETY_DOOR_ENABLE
-#define SAFETY_DOOR_PORT            GPIOA
-#define SAFETY_DOOR_PIN             7                           // EXP2-6
-#endif
+#define CONTROL_PORT                GPIOE
+#define RESET_PIN                   10                          // Exp1-5
+#define FEED_HOLD_PIN               11                          // Exp1-6
+#define CYCLE_START_PIN             12                          // Exp1-7
 #define CONTROL_INMODE              GPIO_BITBAND
 
-// Define probe switch input pin.
-#define PROBE_PORT                  GPIOE
-#define PROBE_PIN                   4                           // BLTouch PE4
+#define AUXINPUT0_PORT              GPIOE
+#define AUXINPUT0_PIN               13                          // EXP1-8
+#define AUXINPUT1_PORT              GPIOE
+#define AUXINPUT1_PIN               5                           // Servos
 
-// Safe Power Control
-#define STEPPERS_POWER_PORT         GPIOC
-#define STEPPERS_POWER_PIN          13
+#if PROBE_ENABLE
+#define PROBE_PORT                  AUXINPUT1_PORT
+#define PROBE_PIN                   AUXINPUT1_PIN
+#endif
 
+#if SAFETY_DOOR_ENABLE
+#define SAFETY_DOOR_PORT            AUXINPUT0_PORT
+#define SAFETY_DOOR_PIN             AUXINPUT0_PIN
+#endif
+
+#if MOTOR_FAULT_ENABLE
+#define MOTOR_FAULT_PORT            AUXINPUT0_PORT
+#define MOTOR_FAULT_PIN             AUXINPUT0_PIN
+#endif
+
+// XXXXX
+// SKR-2 has SD/MMC interface and does not work in SPI mode
 #if SDCARD_ENABLE
-#define SDCARD_SDIO                 1
+#error "SD SDIO/MMC interface does not support SPI."
 #endif
-
-#if ETHERNET_ENABLE
-#undef SPI_ENABLE
-#define SPI_ENABLE 1
-#define SPI_CS_PORT                 GPIOB
-#define SPI_CS_PIN                  12                              // ESP-CS
-#define SPI_IRQ_PORT                GPIOB
-#define SPI_IRQ_PIN                 10                              // ESP-IO0
-#define SPI_RST_PORT                GPIOB
-#define SPI_RST_PIN                 11                              // ESP-IO1
-#endif
-
-#if TRINAMIC_UART_ENABLE
-
-#undef TRINAMIC_UART_ENABLE
-#define TRINAMIC_UART_ENABLE        2
-
-#define MOTOR_UARTX_PORT            GPIOE
-#define MOTOR_UARTX_PIN             0
-#define MOTOR_UARTY_PORT            GPIOD
-#define MOTOR_UARTY_PIN             3
-#define MOTOR_UARTZ_PORT            GPIOD
-#define MOTOR_UARTZ_PIN             0
-
-#ifdef  M3_AVAILABLE
-#define MOTOR_UARTM3_PORT           GPIOC
-#define MOTOR_UARTM3_PIN            6
-#endif
-
-#ifdef  M4_AVAILABLE
-#define MOTOR_UARTM4_PORT           GPIOD
-#define MOTOR_UARTM4_PIN            12
-#endif
-
-#elif TRINAMIC_SPI_ENABLE
 
 // The BTT SKR-2 uses software SPI
 // MISO pin is also SWCLK from JTAG port, so can't debug with Trinamic SPI drivers:-(
@@ -209,6 +190,7 @@
 #define TRINAMIC_MISO_PIN           14
 #endif
 
+// The CS pins are also the UART pins for 1 wire serial Trinamic drivers (2208, 2209)
 #define MOTOR_CSX_PORT              GPIOE
 #define MOTOR_CSX_PIN               0
 #define MOTOR_CSY_PORT              GPIOD
@@ -226,6 +208,8 @@
 #define MOTOR_CSM4_PIN              12
 #endif
 
-#endif
+// Safe Power Control
+#define STEPPERS_POWER_PORT         GPIOC
+#define STEPPERS_POWER_PIN          13
 
 // EOF

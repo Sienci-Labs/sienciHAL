@@ -3,23 +3,23 @@
 
   Part of grblHAL
 
-  Copyright (c) 2021-2023 fitch22, Terje Io
+  Copyright (c) 2021-2024 fitch22, Terje Io
 
   Some software serial code is ported from Arduino.  Credit belongs to the many
   authors that contributed to that project.
 
-  Grbl is free software: you can redistribute it and/or modify
+  grblHAL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
-  Grbl is distributed in the hope that it will be useful,
+  grblHAL is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+  along with grblHAL. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "driver.h"
@@ -81,8 +81,12 @@ void tmc_uart_write (trinamic_motor_t driver, TMC_uart_write_datagram_t *dgr)
 
 void tmc_uart_init (void)
 {
-    memcpy(&tmc_uart, serial2Init(230400), sizeof(io_stream_t));
+    io_stream_t const *stream;
 
+    if((stream = stream_open_instance(TRINAMIC_STREAM, 230400, NULL, "Trinamic UART")) == NULL)
+        stream = stream_null_init(230400);
+
+    memcpy(&tmc_uart, stream, sizeof(io_stream_t));
     tmc_uart.disable_rx(true);
     tmc_uart.set_enqueue_rt_handler(stream_buffer_all);
 }
@@ -93,13 +97,10 @@ void tmc_uart_init (void)
 
 #include "trinamic/common.h"
 
-#ifndef TMC_UART_TIMER_N
-#define TMC_UART_TIMER_N        7
-#endif
 #define TMC_UART_TIMER          timer(TMC_UART_TIMER_N)
 #define TMC_UART_IRQn           timerINT(TMC_UART_TIMER_N)
 #define TMC_UART_IRQHandler     timerHANDLER(TMC_UART_TIMER_N)
-#define TMC_UART_CLKENA         timerCLKENA(TMC_UART_TIMER_N)
+#define TMC_UART_CLKENA         timerCLKEN(TMC_UART_TIMER_N)
 
 #define SWS_BAUDRATE            100000
 #define ABORT_TIMEOUT           5           // ms
@@ -481,7 +482,7 @@ void TMC_UART_IRQHandler (void)
     }
 }
 
-#if defined(BOARD_FYSETC_S6) || defined(BOARD_BTT_SKR_PRO_1_1) || defined(BOARD_BTT_SKR_PRO_1_2)
+#if defined(BOARD_FYSETC_S6) || defined(BOARD_BTT_SKR_PRO_1_1) || defined(BOARD_BTT_SKR_PRO_1_2) || defined(BOARD_MKS_ROBIN_NANO_30) || defined(BOARD_MKS_EAGLE)
 
 void board_init (void)
 {

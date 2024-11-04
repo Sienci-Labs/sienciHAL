@@ -3,7 +3,7 @@
 
   Part of grblHAL
 
-  Copyright (c) 2020-2021 Terje Io
+  Copyright (c) 2020-2024 Terje Io
 
   Grbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,6 +30,10 @@
 #include "spi.h"
 #include "grbl/protocol.h"
 #include "grbl/settings.h"
+
+#ifdef NEOPIXEL_GPO
+extern void neopixel_init (void);
+#endif
 
 #if TRINAMIC_SPI_ENABLE
 
@@ -63,12 +67,12 @@ TMC_spi_status_t tmc_spi_read (trinamic_motor_t driver, TMC_spi_datagram_t *reg)
         spi_put_byte(0);
     } while(idx);
 
-    while(--dly);
+    while(--dly) {};
 
     DIGITAL_OUT(cs.port, cs.pin, 1);
 
     dly = 50;
-    while(--dly);
+    while(--dly) {};
 
     DIGITAL_OUT(cs.port, cs.pin, 0);
 
@@ -91,12 +95,12 @@ TMC_spi_status_t tmc_spi_read (trinamic_motor_t driver, TMC_spi_datagram_t *reg)
     } while(idx);
 
     dly = 100;
-    while(--dly);
+    while(--dly) {};
 
     DIGITAL_OUT(cs.port, cs.pin, 1);
 
     dly = 50;
-    while(--dly);
+    while(--dly) {};
 
     spi_set_speed(f_spi);
 
@@ -131,12 +135,12 @@ TMC_spi_status_t tmc_spi_write (trinamic_motor_t driver, TMC_spi_datagram_t *reg
         }
     } while(idx);
 
-    while(--dly);
+    while(--dly) {};
 
     DIGITAL_OUT(cs.port, cs.pin, 1);
 
     dly = 50;
-    while(--dly);
+    while(--dly) {};
 
     spi_set_speed(f_spi);
 
@@ -158,7 +162,6 @@ static void if_init (uint8_t motors, axes_signals_t axisflags)
 }
 
 #endif
-
 
 void board_init (void)
 {
@@ -183,7 +186,11 @@ void board_init (void)
 
     tmc_uart_init();
 
-    #endif
+#endif
+
+#ifdef NEOPIXEL_GPO
+    neopixel_init();
+#endif
 }
 
 #endif

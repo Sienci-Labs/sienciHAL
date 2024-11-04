@@ -5,18 +5,18 @@
 
   Copyright (c) 2020-2021 Terje Io
 
-  Grbl is free software: you can redistribute it and/or modify
+  GrblHAL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
-  Grbl is distributed in the hope that it will be useful,
+  GrblHAL is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
+  along with GrblHAL. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #if N_ABC_MOTORS
@@ -28,9 +28,11 @@
 #endif
 
 #define BOARD_NAME "Generic Uno"
-#define I2C_PORT 1
+#define BOARD_URL "https://www.makerfabs.com/arduino-cnc-shield-v3.html"
+
+#define SERIAL_PORT     2   // GPIOA: TX = 2, RX = 3
+#define I2C_PORT        1   // GPIOB: SCL = 8, SDA = 9
 #define IS_NUCLEO_BOB
-#define VARIABLE_SPINDLE // Comment out to disable variable spindle
 
 // Define step pulse output pins.
 #define X_STEP_PORT             GPIOA // D2
@@ -75,22 +77,31 @@
 
 #define Z_LIMIT_POLL
 
-// Define spindle enable and spindle direction output pins.
-#ifdef VARIABLE_SPINDLE
-  #define SPINDLE_ENABLE_PORT   GPIOB // on morpho header
-  #define SPINDLE_ENABLE_PIN    7
+#define AUXOUTPUT0_PORT         GPIOA // Spindle PWM
+#define AUXOUTPUT0_PIN          7
+#define AUXOUTPUT1_PORT         GPIOA // Spindle direction
+#define AUXOUTPUT1_PIN          5
+#if DRIVER_SPINDLE_PWM_ENABLE
+#define AUXOUTPUT2_PORT         GPIOB // Spindle enable, on morpho header
+#define AUXOUTPUT2_PIN          7
 #else
-  #define SPINDLE_ENABLE_PORT   GPIOA // D12
-  #define SPINDLE_ENABLE_PIN    6
+#define AUXOUTPUT2_PORT         GPIOA // Spindle enable
+#define AUXOUTPUT2_PIN          6
 #endif
-#define SPINDLE_DIRECTION_PORT  GPIOA // D13
-#define SPINDLE_DIRECTION_PIN   5
 
-// Define spindle PWM output pin.
-#ifdef VARIABLE_SPINDLE
-#define SPINDLE_PWM_PORT_BASE   GPIOA_BASE // D11
-#define SPINDLE_PWM_PIN         7
+// Define driver spindle pins
+#if DRIVER_SPINDLE_ENABLE
+#define SPINDLE_ENABLE_PORT     AUXOUTPUT2_PORT
+#define SPINDLE_ENABLE_PIN      AUXOUTPUT2_PIN
+#if DRIVER_SPINDLE_PWM_ENABLE
+#define SPINDLE_PWM_PORT        AUXOUTPUT0_PORT
+#define SPINDLE_PWM_PIN         AUXOUTPUT0_PIN
 #endif
+#if DRIVER_SPINDLE_DIR_ENABLE
+#define SPINDLE_DIRECTION_PORT  AUXOUTPUT1_PORT
+#define SPINDLE_DIRECTION_PIN   AUXOUTPUT1_PIN
+#endif
+#endif //DRIVER_SPINDLE_ENABLE
 
 // Define flood and mist coolant enable output pins.
 #define COOLANT_FLOOD_PORT      GPIOB // A3
@@ -103,11 +114,14 @@
 #define RESET_PIN               0 // A0
 #define FEED_HOLD_PIN           1 // A1
 #define CYCLE_START_PIN         4 // A2
-
 #define CONTROL_INMODE          GPIO_MAP
 
-// Define probe switch input pin.
-#define PROBE_PORT              GPIOC // A5
-#define PROBE_PIN               0
+#define AUXINPUT0_PORT          GPIOC // A5
+#define AUXINPUT0_PIN           0
+
+#if PROBE_ENABLE
+#define PROBE_PORT              AUXINPUT0_PORT
+#define PROBE_PIN               AUXINPUT0_PIN
+#endif
 
 /**/

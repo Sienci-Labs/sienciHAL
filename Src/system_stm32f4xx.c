@@ -151,30 +151,40 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
   */
 void SystemInit(void)
 {
+    extern uint8_t _estack; /* Symbol defined in the linker script */
 
-    #if BOARD_LONGBOARD32
+    uint32_t *addr;
 
-    if ( *((unsigned long *)0x2003FFF0) == 0xDEADBEEF ) {
-      *((unsigned long *)0x2003FFF0) =  0xCAFEFEED; // Reset our trigger    
-    
-    __enable_irq();
-    HAL_RCC_DeInit();
-    HAL_DeInit();
-    SysTick->CTRL = SysTick->LOAD = SysTick->VAL = 0;
-    __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
+    addr = (uint32_t *)(((uint32_t)&_estack - 1) & 0xFFFFFFE0);
 
-    const uint32_t p = (*((uint32_t *) 0x1FFF0000));
-    __set_MSP( p );
+    if(*addr == 0xDEADBEEF) {
 
-    void (*SysMemBootJump)(void);
-    SysMemBootJump = (void (*)(void)) (*((uint32_t *) 0x1FFF0004));
-    SysMemBootJump();
+        uint32_t i;
+        void (*SysMemBootJump)(void);
 
-    while( 1 ) {}
+        *addr = 0xCAFEFEED; // Reset our trigger
 
+        __disable_irq();
+
+        HAL_RCC_DeInit();
+        HAL_DeInit();
+
+        for(i = 0; i < 5; i++) {
+            NVIC->ICER[i] = 0xFFFFFFFF;
+            NVIC->ICPR[i] = 0xFFFFFFFF;
+        }
+        __enable_irq();
+
+        SysTick->CTRL = SysTick->LOAD = SysTick->VAL = 0;
+        __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
+
+        __set_MSP(*(uint32_t *)0x1FFF0000);
+
+        SysMemBootJump = (void(*)(void))(*((uint32_t *)0x1FFF0004));
+        SysMemBootJump();
+
+        while(1) {};
     }
-
-  #endif
 
   /* FPU settings ------------------------------------------------------------*/
   #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
