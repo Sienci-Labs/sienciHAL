@@ -160,8 +160,6 @@
   #include "boards/mini_blackpill_map.h"
 #elif defined(BOARD_FLEXI_HAL)
   #include "boards/flexi_hal_map.h"
-#elif defined(BOARD_LONGBOARD32)
-  #include "longboard32_map.h"
 #elif defined(BOARD_STM32F401_UNI)
   #include "boards/stm32f401_uni_map.h"
 #elif defined(BOARD_HALCYON_V1)
@@ -238,6 +236,7 @@
 
 #ifndef RPM_COUNTER_N
 #define RPM_COUNTER_N   3
+#endif
 #if SPINDLE_PWM_PORT_BASE == GPIOA_BASE
   #if SPINDLE_PWM_PIN == 5 // PA5 - TIM2_CH1
     #define SPINDLE_PWM_TIMER_N     2
@@ -296,7 +295,7 @@
     #define SPINDLE_PWM_TIMER_INV   0
     #define SPINDLE_PWM_TIMER_AF    3
   #endif
-#endif
+#endif  
 #ifndef RPM_TIMER_N
 #define RPM_TIMER_N     2
 #endif
