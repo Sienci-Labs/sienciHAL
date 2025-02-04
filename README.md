@@ -20,7 +20,8 @@ Loosely based on code from robomechs [6-AXIS-USBCNC-GRBL](https://github.com/rob
    git submodule update --init --recursive --force
    git submodule foreach --recursive
    ```
-1. If you have any other issues, ensure sub-module references are set correctly in .gitmodules 
+1. If you have any other issues, ensure sub-module references are set correctly in .gitmodules
+1. If you ever need to run an update, copy `platformio.ini` to another folder then send `git reset --hard` then `git pull --recurse-submodules` to get all the submodules re-mounted, then restore the platformio.ini file to the original folder.
 
 A submodule is a link to another repository at a particular snapshot. It allows you to keep a repository as a subdirectory of another repository, which helps in managing projects with multiple dependencies. This allows these sub-repositories to maintain their own histories and stay independent of the parent codebase.
 
