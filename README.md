@@ -1,3 +1,26 @@
+**Note that sienciHAL is now intentionally not under active development**. This is because when we first made it, it was an experiment into whether we could update and modify grblHAL to suit our needs and what we felt the future of Hobby CNC should look like. Now that it's been proven and many more have started adapting our work, we were keen to re-merge all our changes back into grblHAL with Terje's terrific understanding and help, that way all future Sienci CNCs can use stock firmware and everyone else in the CNC community can benefit from the new approaches and features implemented.
+
+# Changelog
+
+These are all pertaining to the SLB only, not the SLB EXT:
+
+- [5.0.5b-as](https://github.com/Sienci-Labs/Resources/blob/main/_downloads/_superlongboard/SuperLongBoard_B5.0.5b-as.hex)
+  - Alternate build to support Y-axis auto-squaring for dual motor/sensor setups
+  - Never officially tested for release, but reported by community as stable
+  - Simply deleted ‘#’ on “-D Y_AUTO_SQUARE=1” on line 88 of [platform.ini on the 'internal-temp-fix' branch](https://github.com/Sienci-Labs/sienciHAL/blob/internal-temp-fix/platformio.ini)
+- [5.0.5b-ngc](https://github.com/Sienci-Labs/Resources/blob/main/_downloads/_superlongboard/SuperLongBoard_B5.0.5b-ngc.hex)
+  - Added support for NGC expressions for using more complex macros using the SD card
+  - Never officially tested for release, but reported by community as stable
+  - Simply added “-D NGC_EXPRESSIONS_ENABLE=1” around line 200 of [platform.ini on the 'internal-temp-fix' branch](https://github.com/Sienci-Labs/sienciHAL/blob/internal-temp-fix/platformio.ini)
+- [5.0.5b](https://drive.google.com/file/d/1YTGGgDs-a5Ajsb47IDdven7NOovp7flb/view?usp=drive_link) (found on branch ['internal-temp-fix'](https://github.com/Sienci-Labs/sienciHAL/blob/internal-temp-fix))
+  - Updated default A-axis step/mm to match typical Vortex setups using 32nd microstepping
+  - Updated defaults to accommodate some machine setups that couldn’t handle the max speeds and accelerations of the SLB
+  - Changed min spindle speed, spindle on delay, and default enabled spindles to match typical spindle setups using the SLB
+- [5.0.5](https://drive.google.com/file/d/1-1W322z5idOQmhREUlAVHQBAa6PCsN63/view?usp=drive_link): default for June ➜ Oct 2024
+  - Updated default homing speed to stop occasional disconnection issues
+  - Fixed E-stop hit requiring board power cycle to clear
+- [5.0.3](https://drive.google.com/file/d/1DHaKkDzn2ZB0fBEVrO26ULAGjjX7n3NU/view?usp=drive_link): firmware on original batch of 500 SLBs (April 2024)
+
 # STM32F4xx grblHAL driver
 
 Note that for Longboard32, genericSTM32F412VG.json needs to be added to .platformio/platforms/ststm32/boards
